@@ -4,17 +4,12 @@
 #include <Log.h>
 using namespace std;
 
-Scene::Scene(){
-    Log::FormattedDebug("Scene", "Constructor", "생성자 호출");
-    this->run = true;
-    this->process_completed = false;
-    thread th([&]() {this->__Process__();});
-    th.detach();
+Scene::Scene() : ren(nullptr) {  
+   Log::FormattedDebug("Scene", "Constructor", "Calling constructor of Scene");  
 }
 
 Scene::~Scene() {
-    Log::FormattedDebug("Scene", "Destructor", "소멸자 호출");
-    //TODO : Destroy Data
+	Log::FormattedDebug("Scene", "Destructor", "Calling destructor of Scene");
 }
 
 int Scene::RegisterRenderer(SDL_Renderer* ren) {
@@ -33,23 +28,10 @@ int Scene::PushEvent(EventType T, int x, int y, int x_rel, int y_rel, EventMouse
 }
 
 int Scene::__Process__() {
-    while (this->run) {
-        while (!this->event_queue.empty()) {
-            this->EventProcess(this->event_queue.front());
-            this->event_queue.pop();
-        }
-        this->NormalProcess();
+    while (!this->event_queue.empty()) {
+        this->EventProcess(this->event_queue.front());
+        this->event_queue.pop();
     }
-    this->process_completed = true;
+    this->NormalProcess();
     return 0;
-}
-
-int Scene::Destroy() {
-	this->run = false;
-	while (!this->process_completed);
-	return 0;
-}
-
-bool Scene::IsRun() {
-    return this->run;
 }

@@ -2,7 +2,7 @@
 #include <Log.h>
 
 Game::Game() {
-	Log::FormattedDebug("Game", "Constructor", "생성자 호출");
+	Log::System("Initializing game...");
 
 	Log::System("Setting up the game board...");
 	for (int i = 6; i < 17; i++) {
@@ -32,6 +32,9 @@ Game::Game() {
 	players.emplace_back(PLAYER_SUPER_ZOMBIE, 0, 0);
 
 	current_turn = 0;
+
+	this->teleporting_player = nullptr;
+	this->event_triggered_player = nullptr;
 
 	Log::System("Game setup completed.");
 }
@@ -211,17 +214,19 @@ void Game::Move(double x, double y) {
 	Hexagon* hexagon = GetHexagon(x, y);
 
 	if(teleporting_player != nullptr) {
-		teleporting_player->SetPosition(x, y);
+		std::vector<Hexagon*> path;
+		path.push_back(hexagon);
+		path.push_back(GetHexagon(teleporting_player->GetX(), teleporting_player->GetY()));
+		teleporting_player->SetPosition(x, y, &path);
 		Log::System("Player teleported to hexagon (" + std::to_string(x) + ", " + std::to_string(y) + ").");
 		teleporting_player = nullptr;
-		current_turn = (current_turn + 1) % players.size();
 		return;
 	}
 
 	Player* prev_player = GetPlayer(x, y);
-	if (IsMovable(hexagon, player)) {
-		player->SetPosition(x, y);
-		current_turn = (current_turn + 1) % players.size();
+	std::vector<Hexagon*> path;
+	if (IsMovable(hexagon, player, &path)) {
+		player->SetPosition(x, y, &path);
 		Log::System("Player moved to hexagon (" + std::to_string(x) + ", " + std::to_string(y) + ")");
 	
 		if (player->GetState() == PLAYER_SUPER_ZOMBIE || player->GetState() == PLAYER_ZOMBIE) {
@@ -232,32 +237,34 @@ void Game::Move(double x, double y) {
 		}
 		if (player->GetState() == PLAYER_HUMAN && hexagon->GetProperty() == HEXAGON_TELEPORT) {
 			// Teleport to the other teleport hexagon (It have to be modified later)
-			Player* tp1 = GetPlayer(-4, 0);
-			Player* tp2 = GetPlayer(2, 2);
-			Player* tp3 = GetPlayer(2, -2);
+			bool tp1 = GetPlayer(-4, 0) == nullptr && !(x == -4 && y == 0);
+			bool tp2 = GetPlayer(2, 2) == nullptr && !(x == 2 && y == 2);
+			bool tp3 = GetPlayer(2, -2) == nullptr && !(x == 2 && y == -2);
 
-			int num = (tp1 == nullptr) + (tp2 == nullptr) + (tp3 == nullptr);
+			int num = tp1 + tp2 + tp3;
 			switch (num) {
 			case 0:
 				Log::System("No teleport hexagon available. Cannot teleport.");
 				break;
 			case 1:
-				if (tp1 == nullptr) {
-					player->SetPosition(-4, 0);
+				if (tp1) {
+					path.insert(path.begin(), GetHexagon(-4, 0));
+					player->SetPosition(-4, 0, &path);
 					Log::System("Player teleported to hexagon (-4, 0).");
 				}
-				else if (tp2 == nullptr) {
-					player->SetPosition(2, 2);
+				else if (tp2) {
+					path.insert(path.begin(), GetHexagon(2, 2));
+					player->SetPosition(2, 2, &path);
 					Log::System("Player teleported to hexagon (2, 2).");
 				}
-				else if (tp3 == nullptr) {
-					player->SetPosition(2, -2);
+				else if (tp3) {
+					path.insert(path.begin(), GetHexagon(2, -2));
+					player->SetPosition(2, -2, &path);
 					Log::System("Player teleported to hexagon (2, -2).");
 				}
 				break;
 			case 2:
 				teleporting_player = player;
-				current_turn = (current_turn - 1) % players.size();
 				Log::System("Select a teleport hexagon to teleport.");
 				break;
 			}
@@ -270,8 +277,30 @@ void Game::Move(double x, double y) {
 			// Event hexagon logic (to be implemented)
 			Log::System("Player at hexagon (" + std::to_string(x) + ", " + std::to_string(y) + ") triggered an event.");
 
-			hexagon->SetProperty(HEXAGON_NORMAL);
-			GetHexagon(players[SUPER_ZOMBIE_INDEX].GetX(), players[SUPER_ZOMBIE_INDEX].GetY())->SetProperty(HEXAGON_EVENT);
+			event_triggered_player = player;
 		}
 	}
+}
+
+void Game::UpdateTurn() {
+	for (auto& player : this->players) {
+		player.UpdateState();
+	}
+	current_turn = (current_turn + 1) % players.size();
+}
+
+bool Game::IsEventTriggered() {
+	return event_triggered_player != nullptr;
+}
+
+void Game::ExecuteEvent() {
+	if (event_triggered_player == nullptr) {
+		return;
+	}
+	Log::System("Executing event for player at hexagon (" + std::to_string(event_triggered_player->GetX()) + ", " + std::to_string(event_triggered_player->GetY()) + ").");
+
+	GetHexagon(this->event_triggered_player->GetX(), this->event_triggered_player->GetY())->SetProperty(HEXAGON_NORMAL);
+	GetHexagon(players[SUPER_ZOMBIE_INDEX].GetX(), players[SUPER_ZOMBIE_INDEX].GetY())->SetProperty(HEXAGON_EVENT);
+	
+	event_triggered_player = nullptr;
 }

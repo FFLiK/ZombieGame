@@ -4,7 +4,7 @@
 #include <Log.h>
 
 Window::Window(WindowData w_dat) {
-	Log::FormattedDebug("Window", "Constructor", "생성자 호출");
+	Log::FormattedDebug("Window", "Constructor", "Calling constructor of Window with title: " + w_dat.title + ", width: " + std::to_string(w_dat.width) + ", height: " + std::to_string(w_dat.height) + ", fps: " + std::to_string(w_dat.fps));
 	if (this->run) {
 		return;
 	}
@@ -24,7 +24,7 @@ Window::~Window() {
 	this->ren = nullptr;
 	this->win = nullptr;
 
-	Log::FormattedDebug("Window", "Destructor", "소멸자 호출");
+	Log::FormattedDebug("Window", "Destructor", "Calling destructor of Window and destroying window and renderer");
 }
 
 int Window::SetWindow(WindowData w_dat) {
@@ -41,13 +41,14 @@ int Window::SetWindow(WindowData w_dat) {
 	return 0;
 }
 
-int Window::Rendering() {
-	thread th([&]() {this->__RenderingProcess__();});
+int Window::Execute() {
+	thread th([&]() {this->__Process__();});
 	th.detach();
 	return 0;
 }
 
 int Window::AddScene(Scene* scene, int pos) {
+	this->mtx.lock();
 	if (find(this->scene_list.begin(), this->scene_list.end(), scene) != this->scene_list.end()) {
 		return 1;
 	}
@@ -58,24 +59,27 @@ int Window::AddScene(Scene* scene, int pos) {
 	else {
 		this->scene_list.insert(this->scene_list.begin() + pos, scene);
 	}
+	this->mtx.unlock();
 	return 0;
 }
 
 int Window::DeleteScene(Scene* scene) {
+	this->mtx.lock();
 	auto iter = find(this->scene_list.begin(), this->scene_list.end(), scene);
 	if (iter == this->scene_list.end()) {
 		return 1;
 	}
-	(*iter)->Destroy();
 	delete *iter;
 	*iter = nullptr;
 	this->scene_list.erase(iter);
+	this->mtx.unlock();
 	return 0;
 }
 
-void Window::__RenderingProcess__() {
+void Window::__Process__() {
 	int prev = this->RunTime() * 1000;
 	while (this->run) {
+		this->mtx.lock();
 		int delta = (this->RunTime() * 1000 - prev);
 		if (delta > 1000000 / this->fps) {
 			prev += 1000000 / this->fps;
@@ -85,8 +89,11 @@ void Window::__RenderingProcess__() {
 			}
 			SDL_SetRenderDrawColor(this->ren, 0, 0, 0, 0);
 			SDL_RenderPresent(this->ren);
-			SDL_Delay(1000 / this->fps - 1);
 		}
+		for (int i = this->scene_list.size() - 1; i >= 0; i--) {
+			this->scene_list[i]->__Process__();
+		}
+		this->mtx.unlock();
 	}
 	this->rendering_completed = true;
 }
@@ -95,7 +102,6 @@ int Window::Destroy() {
 	this->run = false;
 	while (!this->rendering_completed);
 	for (int i = 0; i < this->scene_list.size(); i++) {
-		this->scene_list[i]->Destroy();
 		delete this->scene_list[i];
 		this->scene_list[i] = nullptr;
 	}
@@ -109,32 +115,22 @@ EventType Window::PollEvent() {
 	case SDL_QUIT:
 		return QUIT;
 	case SDL_KEYDOWN:
-		for (auto& scene : this->scene_list) {
-			scene->PushEvent(KEY_DOWN, this->evt.key.keysym.sym);
-		}
+		this->scene_list[0]->PushEvent(KEY_DOWN, this->evt.key.keysym.sym);
 		return KEY_DOWN;
 	case SDL_KEYUP:
-		for (auto& scene : this->scene_list) {
-			scene->PushEvent(KEY_UP, this->evt.key.keysym.sym);
-		}
+		this->scene_list[0]->PushEvent(KEY_UP, this->evt.key.keysym.sym);
 		return KEY_UP;
 	case SDL_MOUSEBUTTONDOWN:
 		this->evt.motion.y *= -1;
 		switch(this->evt.button.button) {
 		case SDL_BUTTON_LEFT:
-			for (auto& scene : this->scene_list) {
-				scene->PushEvent(MOUSE_DOWN, this->evt.button.x, -this->evt.button.y, 0, 0, MOUSE_LEFT);
-			}
+			this->scene_list[0]->PushEvent(MOUSE_DOWN, this->evt.button.x, -this->evt.button.y, 0, 0, MOUSE_LEFT);
 			break;
 		case SDL_BUTTON_RIGHT:
-			for (auto& scene : this->scene_list) {
-				scene->PushEvent(MOUSE_DOWN, this->evt.button.x, -this->evt.button.y, 0, 0, MOUSE_RIGHT);
-			}
+			this->scene_list[0]->PushEvent(MOUSE_DOWN, this->evt.button.x, -this->evt.button.y, 0, 0, MOUSE_RIGHT);
 			break;
 		case SDL_BUTTON_MIDDLE:
-			for (auto& scene : this->scene_list) {
-				scene->PushEvent(MOUSE_DOWN, this->evt.button.x, -this->evt.button.y, 0, 0, MOUSE_MIDDLE);
-			}
+			this->scene_list[0]->PushEvent(MOUSE_DOWN, this->evt.button.x, -this->evt.button.y, 0, 0, MOUSE_MIDDLE);
 			break;
 		}
 		return MOUSE_DOWN;
@@ -142,27 +138,19 @@ EventType Window::PollEvent() {
 		this->evt.motion.y *= -1;
 		switch (this->evt.button.button) {
 			case SDL_BUTTON_LEFT:
-				for (auto& scene : this->scene_list) {
-					scene->PushEvent(MOUSE_UP, this->evt.button.x, -this->evt.button.y, 0, 0, MOUSE_LEFT);
-				}
+				this->scene_list[0]->PushEvent(MOUSE_UP, this->evt.button.x, -this->evt.button.y, 0, 0, MOUSE_LEFT);
 				break;
 			case SDL_BUTTON_RIGHT:
-				for (auto& scene : this->scene_list) {
-					scene->PushEvent(MOUSE_UP, this->evt.button.x, -this->evt.button.y, 0, 0, MOUSE_RIGHT);
-				}
+				this->scene_list[0]->PushEvent(MOUSE_UP, this->evt.button.x, -this->evt.button.y, 0, 0, MOUSE_RIGHT);
 				break;
 			case SDL_BUTTON_MIDDLE:
-				for (auto& scene : this->scene_list) {
-					scene->PushEvent(MOUSE_UP, this->evt.button.x, -this->evt.button.y, 0, 0, MOUSE_MIDDLE);
-				}
+				this->scene_list[0]->PushEvent(MOUSE_UP, this->evt.button.x, -this->evt.button.y, 0, 0, MOUSE_MIDDLE);
 				break;
 		}
 		return MOUSE_UP;
 	case SDL_MOUSEMOTION:
 		this->evt.motion.y *= -1;
-		for (auto& scene : this->scene_list) {
-			scene->PushEvent(MOUSE_MOVE, this->evt.motion.x, -this->evt.motion.y, this->evt.motion.xrel, this->evt.motion.yrel, MOUSE_NONE);
-		}
+		this->scene_list[0]->PushEvent(MOUSE_MOVE, this->evt.motion.x, -this->evt.motion.y, this->evt.motion.xrel, this->evt.motion.yrel, MOUSE_NONE);
 		return MOUSE_MOVE;
 	default:
 		return NONE;

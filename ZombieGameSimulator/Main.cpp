@@ -10,14 +10,14 @@ using namespace std;
 int main(int argc, char *argv[]) {
 	SDL_Init(SDL_INIT_EVERYTHING);
 	Window* win = new Window({"Zombie Game", 1280, 720, 60});
-	win->Rendering();
+	win->Execute();
 
 	Game game;
 
 	Scene* scene;
-	scene = new GameScene(&game);
+	scene = new GameScene(win, &game);
 	win->AddScene(scene, 0);
-	scene = new BackgroundScene(&game);
+	scene = new BackgroundScene();
 	win->AddScene(scene, 1);
 
 	bool run = true;

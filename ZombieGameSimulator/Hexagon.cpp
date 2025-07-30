@@ -5,8 +5,8 @@ Hexagon::Hexagon(double x, double y) {
 	this->x = x;
 	this->y = y;
 
-	GetPixelFromHexagon(x, y, center_x, center_y);
-	GetPointsFromHexagon(x, y, circumradius, points);
+	GetCenterPointFromHexagonCoordinate(x, y, center_x, center_y);
+	GetPointsFromHexagonCoordinate(x, y, circumradius, points);
 }
 double Hexagon::GetX() const { return x; }
 double Hexagon::GetY() const { return y; }
@@ -50,20 +50,24 @@ void Hexagon::SetProperty(HexagonType type) {
 	this->type = type;
 }
 
-void Hexagon::GetPixelFromHexagon(double x, double y, double &pixel_x, double &pixel_y) {
+void Hexagon::GetCenterPointFromHexagonCoordinate(double x, double y, double &pixel_x, double &pixel_y) {
 	pixel_x = x * apothem * 2.0 + 1280 / 2.0;
 	pixel_y = y* circumradius * 3.0 + 720 / 2.0;
 }
 
-void Hexagon::GetPointsFromHexagon(double x, double y, double radius, std::vector<SDL_Point>& points) {
-	double center_x, center_y;
-	GetPixelFromHexagon(x, y, center_x, center_y);
+void Hexagon::GetPointsFromCenterPoint(double center_x, double center_y, double radius, std::vector<SDL_Point>& points) {
 	points.resize(6);
 	for (int i = 0; i < 6; ++i) {
 		double angle = i * M_PI / 3.0 + M_PI / 6.0; // 60 degrees in radians
 		points[i].x = static_cast<int>(center_x + radius * cos(angle));
 		points[i].y = static_cast<int>(center_y + radius * sin(angle));
 	}
+}
+
+void Hexagon::GetPointsFromHexagonCoordinate(double x, double y, double radius, std::vector<SDL_Point>& points) {
+	double center_x, center_y;
+	GetCenterPointFromHexagonCoordinate(x, y, center_x, center_y);
+	GetPointsFromCenterPoint(center_x, center_y, radius, points);
 }
 
 void Hexagon::SetActivated(bool activated) {

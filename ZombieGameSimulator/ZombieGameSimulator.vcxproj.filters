@@ -42,6 +42,9 @@
     <ClInclude Include="GameScene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="EventScene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -66,6 +69,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GameScene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EventScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

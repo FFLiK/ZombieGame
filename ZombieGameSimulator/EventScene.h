@@ -2,14 +2,16 @@
 #include "Scene.h"
 #include "Game.h"
 
-class BackgroundScene : public Scene {
+class EventScene : public Scene {
 public:
-	BackgroundScene();
-	~BackgroundScene();
+	EventScene(Game* game);
+	~EventScene();
 	int Rendering();
-	
+
 private:
 	int EventProcess(Event& evt);
 	int NormalProcess();
+
+	Game* game;
 };
 

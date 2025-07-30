@@ -6,6 +6,9 @@ Player::Player(PlayerState state, double x, double y) {
 	this->x = x;
 	this->y = y;
 	this->state = state;
+	this->reserved_state = state;
+
+	Hexagon::GetCenterPointFromHexagonCoordinate(x, y, this->center_x, this->center_y);
 }
 
 double Player::GetX() const {
@@ -21,15 +24,11 @@ PlayerState Player::GetState() const {
 }
 
 void Player::DrawPlayer(SDL_Renderer* ren, bool activated, bool draw_left, bool draw_right) const {
-	double center_x = 0;
-	double center_y = 0;
-	Hexagon::GetPixelFromHexagon(this->x, this->y, center_x, center_y);
-
 	std::vector <SDL_Point> points;
 
 	switch (this->state) {
 	case PLAYER_HUMAN:
-		Hexagon::GetPointsFromHexagon(this->x, this->y, Player::PLAYER_SIZE, points);
+		Hexagon::GetPointsFromCenterPoint(this->center_x, this->center_y, Player::PLAYER_SIZE, points);
 		Sint16 vx[6], vy[6];
 		for (size_t i = 0; i < 6; ++i) {
 			vx[i] = points[i].x;
@@ -54,7 +53,7 @@ void Player::DrawPlayer(SDL_Renderer* ren, bool activated, bool draw_left, bool 
 		}
 		break;
 	case PLAYER_ZOMBIE:
-		Hexagon::GetPointsFromHexagon(this->x, this->y, Player::PLAYER_SIZE, points);
+		Hexagon::GetPointsFromCenterPoint(this->center_x, this->center_y, Player::PLAYER_SIZE, points);
 		for (size_t i = 0; i < 6; ++i) {
 			vx[i] = points[i].x;
 			vy[i] = points[i].y;
@@ -75,9 +74,10 @@ void Player::DrawPlayer(SDL_Renderer* ren, bool activated, bool draw_left, bool 
 		}
 		else {
 			polygonColor(ren, vx, vy, 6, 0xFFFFFFFF);
-		}		break;
+		}		
+		break;
 	case PLAYER_SUPER_ZOMBIE:
-		Hexagon::GetPointsFromHexagon(this->x, this->y, Player::SUPER_ZOMBIE_SIZE, points);
+		Hexagon::GetPointsFromCenterPoint(this->center_x, this->center_y, Player::SUPER_ZOMBIE_SIZE, points);
 		for (size_t i = 0; i < 6; ++i) {
 			vx[i] = points[i].x;
 			vy[i] = points[i].y;
@@ -92,11 +92,56 @@ void Player::DrawPlayer(SDL_Renderer* ren, bool activated, bool draw_left, bool 
 	}
 }
 
-void Player::SetPosition(double x, double y) {
+void Player::SetPosition(double x, double y, std::vector<Hexagon*>* path) {
 	this->x = x;
 	this->y = y;
+	this->path = *path;
+	std::reverse(this->path.begin(), this->path.end());
 }
 
 void Player::SetState(PlayerState state) {
-	this->state = state;
+	this->reserved_state = state;
+}
+
+bool Player::IsArrived() {
+	return path.empty();
+}
+
+void Player::Move() {
+	if (IsArrived()) {
+		return;
+	}
+
+	Hexagon* current_hexagon = path[0];
+	Hexagon* next_hexagon = path[1];
+
+	double current_center_x, current_center_y;
+	Hexagon::GetCenterPointFromHexagonCoordinate(current_hexagon->GetX(), current_hexagon->GetY(), current_center_x, current_center_y);
+	double next_center_x, next_center_y;
+	Hexagon::GetCenterPointFromHexagonCoordinate(next_hexagon->GetX(), next_hexagon->GetY(), next_center_x, next_center_y);
+
+	double factor = static_cast<double>(moving_frame) / PLAYER_MOVING_FRAME_NUM;
+	factor = 1 - (1 - factor) * (1 - factor);
+
+	this->center_x = current_center_x * (1 - factor) + next_center_x * factor;
+	this->center_y = current_center_y * (1 - factor) + next_center_y * factor;
+
+	if (moving_frame < PLAYER_MOVING_FRAME_NUM) {
+		moving_frame++;
+	}
+	else {
+		moving_frame = 0;
+		path.erase(path.begin());
+		if (path.size() == 1) {
+			path.clear();
+		}
+	}
+}
+
+void Player::UpdateState() {
+	this->state = this->reserved_state;
+}
+
+void Player::MoveSuperZombie() {
+
 }

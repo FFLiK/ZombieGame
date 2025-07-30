@@ -3,6 +3,7 @@
 #include <string>
 #include <Scene.h>
 #include <vector>
+#include <mutex>
 using namespace std;
 
 class Window {
@@ -19,6 +20,7 @@ private:
 
 	vector<Scene*> scene_list;
 
+	std::mutex mtx;
 
 public:
 	class WindowData {
@@ -33,10 +35,10 @@ public:
 
 	int SetWindow(WindowData w_dat);
 	
-	int Rendering();
+	int Execute();
 	int AddScene(Scene *scene, int pos); //0 = Front, -1 = Back, n = nth index
 	int DeleteScene(Scene *scene);
-	void __RenderingProcess__();
+	void __Process__();
 
 	int Destroy();
 	

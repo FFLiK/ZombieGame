@@ -35,8 +35,9 @@ public:
 
 	void SetProperty(HexagonType type);
 
-	static void GetPixelFromHexagon(double x, double y, double &pixel_x, double &pixel_y);
-	static void GetPointsFromHexagon(double x, double y, double radius, std::vector<SDL_Point>& points);
+	static void GetCenterPointFromHexagonCoordinate(double x, double y, double &center_x, double &center_y);
+	static void GetPointsFromCenterPoint(double center_x, double center_y, double radius, std::vector<SDL_Point>& points);
+	static void GetPointsFromHexagonCoordinate(double x, double y, double radius, std::vector<SDL_Point>& points);
 
 	void SetActivated(bool activated);
 

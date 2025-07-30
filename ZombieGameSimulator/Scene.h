@@ -11,25 +11,17 @@ public:
 	virtual ~Scene();
 
 	virtual int Rendering() abstract;
+	virtual int EventProcess(Event& evt) abstract;
+	virtual int NormalProcess() abstract;
+
 	int RegisterRenderer(SDL_Renderer* ren);
 	int PushEvent(EventType T, SDL_Keycode key);
 	int PushEvent(EventType T, int x, int y, int x_rel, int y_rel, EventMouse mt);
-	
-	int Destroy();
-	
-	bool IsRun();
 
 	int __Process__();
 
 protected:
-	atomic<bool> run = false;
-	atomic<bool> process_completed = false;
-
-	SDL_Renderer* ren;
-
+	SDL_Renderer* ren = nullptr;
 	queue<Event> event_queue;
-	
-	virtual int EventProcess(Event &evt) abstract;
-	virtual int NormalProcess() abstract;
 };
 

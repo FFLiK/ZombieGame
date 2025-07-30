@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="BackgroundScene.h" />
     <ClInclude Include="Event.h" />
+    <ClInclude Include="EventScene.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameScene.h" />
     <ClInclude Include="Hexagon.h" />
@@ -31,6 +32,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BackgroundScene.cpp" />
+    <ClCompile Include="EventScene.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameScene.cpp" />
     <ClCompile Include="Hexagon.cpp" />
@@ -92,12 +94,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>D:\KAIST\동아리 및 자치단체\새내기학생회\2025 후새기\소팀 1\ZombieGameSimulator\ZombieGameSimulator;D:\KAIST\동아리 및 자치단체\새내기학생회\2025 후새기\소팀 1\ZombieGameSimulator\ZombieGameSimulator\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\KAIST\동아리 및 자치단체\새내기학생회\2025 후새기\소팀 1\ZombieGameSimulator\ZombieGameSimulator\lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\KAIST\동아리 및 자치단체\새내기학생회\2025 후새기\소팀 1\ZombieGameSimulator\ZombieGame\ZombieGameSimulator;D:\KAIST\동아리 및 자치단체\새내기학생회\2025 후새기\소팀 1\ZombieGameSimulator\ZombieGame\ZombieGameSimulator\include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\KAIST\동아리 및 자치단체\새내기학생회\2025 후새기\소팀 1\ZombieGameSimulator\ZombieGame\ZombieGameSimulator\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>D:\KAIST\동아리 및 자치단체\새내기학생회\2025 후새기\소팀 1\ZombieGameSimulator\ZombieGameSimulator;D:\KAIST\동아리 및 자치단체\새내기학생회\2025 후새기\소팀 1\ZombieGameSimulator\ZombieGameSimulator\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\KAIST\동아리 및 자치단체\새내기학생회\2025 후새기\소팀 1\ZombieGameSimulator\ZombieGameSimulator\lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\KAIST\동아리 및 자치단체\새내기학생회\2025 후새기\소팀 1\ZombieGameSimulator\ZombieGame\ZombieGameSimulator;D:\KAIST\동아리 및 자치단체\새내기학생회\2025 후새기\소팀 1\ZombieGameSimulator\ZombieGame\ZombieGameSimulator\include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\KAIST\동아리 및 자치단체\새내기학생회\2025 후새기\소팀 1\ZombieGameSimulator\ZombieGame\ZombieGameSimulator\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

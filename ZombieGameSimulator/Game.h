@@ -12,11 +12,12 @@ private:
 
 	bool Check(double cur_x, double cur_y, double target_x, double target_y, int step, bool first_move, Hexagon* hexagon, Player* player, std::vector<Hexagon*>* path);
 
-	inline static const int SUPER_ZOMBIE_INDEX = 6;
-
 	Player* teleporting_player;
+	Player* event_triggered_player;
 
 public:
+	inline static const int SUPER_ZOMBIE_INDEX = 6;
+
 	Game();
 
 	std::vector<Hexagon>* GetHexagons();
@@ -28,5 +29,10 @@ public:
 
 	bool IsMovable(Hexagon* hexagon, Player* player, std::vector<Hexagon*>* path = nullptr);
 	void Move(double x, double y);
+
+	void UpdateTurn();
+
+	bool IsEventTriggered();
+	void ExecuteEvent();
 };
 
