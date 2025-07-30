@@ -1,0 +1,47 @@
+#pragma once
+#include <SDL.h>
+#include <SDL2_gfxPrimitives.h>
+#include <vector>
+
+enum HexagonType {
+	HEXAGON_NORMAL,
+	HEXAGON_PAPAL,
+	HEXAGON_TELEPORT,
+	HEXAGON_EVENT
+};
+
+class Hexagon {
+private:
+	inline static const double circumradius = 35;
+	inline static const double apothem = circumradius * 0.86602540378;
+
+	double x, y;
+
+	double center_x, center_y;
+	std::vector<SDL_Point> points;
+
+	HexagonType type = HEXAGON_NORMAL;
+
+	bool activated = false;
+
+public:
+	Hexagon(double x, double y);
+
+	double GetX() const;
+	double GetY() const;
+	HexagonType GetProperty() const;
+
+	void DrawHexagon(SDL_Renderer* ren) const;
+
+	void SetProperty(HexagonType type);
+
+	static void GetPixelFromHexagon(double x, double y, double &pixel_x, double &pixel_y);
+	static void GetPointsFromHexagon(double x, double y, double radius, std::vector<SDL_Point>& points);
+
+	void SetActivated(bool activated);
+
+	bool IsInside(double x, double y) const;
+	
+	bool visited = false;
+};
+
