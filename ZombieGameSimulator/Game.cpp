@@ -170,7 +170,7 @@ bool Game::Check(double cur_x, double cur_y, double tarGet_x, double tarGet_y, i
 bool Game::IsMovable(Hexagon* hexagon, Player* player, std::vector<Hexagon*>* path) {
 	if (teleporting_player != nullptr) {
 		if (hexagon->GetProperty() == HEXAGON_TELEPORT
-			&& (hexagon->GetX() != player->GetX() || hexagon->GetY() != player->GetY())) {
+			&& (hexagon->GetX() != teleporting_player->GetX() || hexagon->GetY() != teleporting_player->GetY())) {
 			return true;
 		}
 		else {
@@ -286,7 +286,9 @@ void Game::UpdateTurn() {
 	for (auto& player : this->players) {
 		player.UpdateState();
 	}
-	current_turn = (current_turn + 1) % players.size();
+	if (this->teleporting_player == nullptr && this->event_triggered_player == nullptr) {
+		current_turn = (current_turn + 1) % players.size();
+	}
 }
 
 bool Game::IsEventTriggered() {
