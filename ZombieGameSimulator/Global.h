@@ -36,7 +36,7 @@ namespace Global {
 	public:
 		static constexpr const char* NAME = "The Last Human";
 		static constexpr const char* DEV_NAME = "Zombie Game";
-		static constexpr const char* VERSION = "0.4.0";
+		static constexpr const char* VERSION = "1.0.0";
 		static const bool IS_RELEASE = false;
 		static constexpr const char* DEVELOPER = "FFLiK";
 
@@ -44,7 +44,7 @@ namespace Global {
 		static constexpr const char* IMAGE_EXTENSION = ".png";
 		static constexpr const char* FONT_EXTENSION = ".ttf";
 
-		static const bool DEBUG_MODE = true;
+		static const bool DEBUG_MODE = false;
 		static const bool TEXTURE_RENDERING = false;
 
 		static int const TITLE_FONT_SIZE = 70;
