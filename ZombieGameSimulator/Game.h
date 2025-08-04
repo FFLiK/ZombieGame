@@ -2,6 +2,8 @@
 #include <vector>
 #include <Hexagon.h>
 #include <Player.h>
+#include <Window.h>
+#include <Scene.h>
 
 class Game {
 private:
@@ -22,10 +24,17 @@ private:
 
 	std::vector<int> score;
 
+	bool have_to_update = false;
+
+	Window* win;
+	Scene* event_scene;
+
+	bool is_started;
+
 public:
 	inline static const int SUPER_ZOMBIE_INDEX = 6;
 
-	Game();
+	Game(Window *win);
 
 	std::vector<Hexagon>* GetHexagons();
 	std::vector<Player>* GetPlayers();
@@ -40,11 +49,15 @@ public:
 	bool IsMovable(Hexagon* hexagon, Player* player, std::vector<Hexagon*>* path = nullptr);
 	void Move(double x, double y);
 
+	bool HaveToUpdate();
+	bool IsMoving();
 	void UpdateTurn();
 
 	bool IsEventTriggered();
 	void ExecuteEvent();
 
 	int LeftTimerTick();
+
+	friend class EventScene;
 };
 

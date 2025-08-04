@@ -54,11 +54,7 @@ namespace Global {
 
 	class EVENT {
 	public:
-		static std::atomic<bool> CALLED;
-		static std::atomic<bool> FINISHED;
-
-		static std::atomic<bool> CREATE_TRIGGER;
-		static std::atomic<bool> DELETE_TRIGGER;
+		static int const MAIN_FONT_SIZE = 50;
 	};
 }
 

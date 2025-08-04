@@ -4,8 +4,9 @@
 #include <Resources.h>
 #include <Texture.h>
 #include <Input.h>
+#include <EventScene.h>
 
-Game::Game() {
+Game::Game(Window *win) {
 	Log::System("Initializing game...");
 
 	Log::System("Setting up the game board...");
@@ -40,6 +41,14 @@ Game::Game() {
 	this->teleporting_player = nullptr;
 	this->event_triggered_player = nullptr;
 	this->zombie_infection_score = nullptr;
+
+	this->win = win;
+	this->event_scene = nullptr;
+
+	score.clear();
+	for (int i = 0; i < players.size(); ++i) {
+		score.push_back(0);
+	}
 
 	Log::System("Game setup completed.");
 }
@@ -85,20 +94,7 @@ int Game::GetScore(int index) const {
 }
 
 void Game::Start() {
-	this->teleporting_player = nullptr;
-	this->event_triggered_player = nullptr;
-	this->zombie_infection_score = nullptr;
-
-	current_turn = 0;
-
 	this->timer = clock();
-	
-	score.clear();
-	score.reserve(players.size());
-	for (int i = 0; i < players.size(); ++i) {
-		score.push_back(0);
-	}
-
 	Log::System("Game started. Current turn: " + std::to_string(current_turn));
 }
 
@@ -126,6 +122,10 @@ bool Game::Check(double cur_x, double cur_y, double tarGet_x, double tarGet_y, i
 	}
 	// Constraint 4 : Players cannot visit the same hexagon twice in the same turn
 	if (h->visited) {
+		return false;
+	}
+	// Constraint 5 : Every players cannot move or crossover the obstacle hexagons
+	if (h->GetProperty() == HEXAGON_OBSTACLE) {
 		return false;
 	}
 
@@ -199,6 +199,16 @@ bool Game::IsMovable(Hexagon* hexagon, Player* player, std::vector<Hexagon*>* pa
 		}
 	}
 
+	if (event_triggered_player != nullptr) {
+		if (GetPlayer(hexagon->GetX(), hexagon->GetY()) != nullptr
+			|| (this->GetCurrentPlayer()->GetX() == hexagon->GetX() && this->GetCurrentPlayer()->GetY() == hexagon->GetY())) {
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
+
 	double player_x = this->GetCurrentPlayer()->GetX();
 	double player_y = this->GetCurrentPlayer()->GetY();
 
@@ -231,6 +241,8 @@ bool Game::IsMovable(Hexagon* hexagon, Player* player, std::vector<Hexagon*>* pa
 }
 
 void Game::Move(double x, double y) {
+	this->have_to_update = true;
+
 	Player* player = GetCurrentPlayer();
 	Hexagon* hexagon = GetHexagon(x, y);
 
@@ -330,6 +342,25 @@ void Game::Move(double x, double y) {
 	}
 }
 
+bool Game::HaveToUpdate() {
+	if (IsMoving()) {
+		return false;
+	}
+	if (!this->have_to_update) {
+		return false;
+	}
+	return true;
+}
+
+bool Game::IsMoving() {
+	for (auto& player : players) {
+		if (!player.IsArrived()) {
+			return true;
+		}
+	}
+	return false;
+}
+
 void Game::UpdateTurn() {
 	for (auto& player : this->players) {
 		player.UpdateState();
@@ -347,6 +378,8 @@ void Game::UpdateTurn() {
 		timer = clock();
 		pause_timer = 0;
 
+		this->have_to_update = false;
+
 		Log::System("Updated turn to player " + std::to_string(current_turn) + " at hexagon (" + std::to_string(players[current_turn].GetX()) + ", " + std::to_string(players[current_turn].GetY()) + ").");
 	}
 }
@@ -359,16 +392,21 @@ void Game::ExecuteEvent() {
 	if (event_triggered_player == nullptr) {
 		return;
 	}
-	if (!Global::EVENT::CALLED) {
+	if (this->event_scene == nullptr) {
 		Log::System("Executing event for player at hexagon (" + std::to_string(event_triggered_player->GetX()) + ", " + std::to_string(event_triggered_player->GetY()) + ").");
-		Global::EVENT::CALLED = true;
-		Global::EVENT::CREATE_TRIGGER = true;
-	}
-	if (Global::EVENT::FINISHED) {
-		GetHexagon(this->event_triggered_player->GetX(), this->event_triggered_player->GetY())->SetProperty(HEXAGON_NORMAL);
+		this->event_scene = new EventScene(this);
+		win->AddScene(this->event_scene, 0);
+	} 
+	else if (static_cast<EventScene*>(this->event_scene)->IsEnd()){
+		for (int i = 0; i < this->hexagons.size(); i++) {
+			if (this->hexagons[i].GetProperty() == HEXAGON_EVENT) {
+				this->hexagons[i].SetProperty(HEXAGON_NORMAL);
+			}
+		}
 		GetHexagon(players[SUPER_ZOMBIE_INDEX].GetX(), players[SUPER_ZOMBIE_INDEX].GetY())->SetProperty(HEXAGON_EVENT);
 		event_triggered_player = nullptr;
-		Global::EVENT::CALLED = false;
+		win->DeleteScene(this->event_scene);
+		this->event_scene = nullptr;
 	}
 }
 

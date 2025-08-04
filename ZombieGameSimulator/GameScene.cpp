@@ -4,11 +4,10 @@
 #include <Texture.h>
 #include <Log.h>
 
-GameScene::GameScene(Window *win, Game* game) {
+GameScene::GameScene(Game* game) {
 	Log::FormattedDebug("GameScene", "Constructor", "Calling constructor of GameScene");
 
 	this->game = game;
-	this->win = win;
 }
 
 GameScene::~GameScene() {
@@ -39,7 +38,7 @@ int GameScene::Rendering() {
 	dst.h = src.h;
 	dst.y = Global::WIN::SCREEN_HEIGHT - 30 * Global::WIN::SIZE_MULTIPLIER - src.h;
 	SDL_RenderCopy(this->ren, this->timer_text_tex[game->LeftTimerTick()], NULL, &dst);
-
+	
 	// Render scores
 	SDL_QueryTexture(this->score_title_tex, NULL, NULL, &src.w, &src.h);
 	dst.w = src.w;
@@ -47,7 +46,7 @@ int GameScene::Rendering() {
 	dst.x = Global::WIN::SCREEN_WIDTH - 200 * Global::WIN::SIZE_MULTIPLIER;
 	dst.y = 40 * Global::WIN::SIZE_MULTIPLIER;
 	SDL_RenderCopy(this->ren, this->score_title_tex, &src, &dst);
-	for (int i = 0; i < game->GetPlayers()->size(); ++i) {
+	for (int i = 0; i < this->score_text_tex.size(); ++i) {
 		SDL_QueryTexture(this->score_text_tex[i], NULL, NULL, &src.w, &src.h);
 		dst.w = src.w;
 		dst.h = src.h;
@@ -72,8 +71,6 @@ int GameScene::Rendering() {
 		prev_y = center_y;
 	}
 
-	bool prev_moving_state = this->is_moving;
-	this->is_moving = false;
 	// Render the players
 	for (int i = game->GetPlayers()->size() - 1; i >= 0; --i) {
 		bool draw_half_left = true;
@@ -94,20 +91,22 @@ int GameScene::Rendering() {
 		}
 		
 		game->GetPlayers()->at(i).Move();
-		this->is_moving |= !game->GetPlayers()->at(i).IsArrived();
 		game->GetPlayers()->at(i).DrawPlayer(this->ren, (i == game->GetCurrentTurn()), draw_half_left, draw_half_right);
 	}
-	if (!this->is_moving && prev_moving_state) {
+
+	if (game->HaveToUpdate()) {
 		if (game->IsEventTriggered()) {
 			game->ExecuteEvent();
-		}
-		for (int i = 0; i < game->GetPlayers()->size() - 1; i++) {
-			std::string score_text = "Group " + std::to_string(i + 1) + " : " + std::to_string(game->GetScore(i));
-			SDL_DestroyTexture(this->score_text_tex[i]);
-			this->score_text_tex[i] = LoadText(score_text.c_str(), this->ren, Global::GAME::SCORE_FONT_SIZE, "font", 255, 255, 255);
+		} else {
+			for (int i = 0; i < game->GetPlayers()->size() - 1; i++) {
+				std::string score_text = "Group " + std::to_string(i + 1) + " : " + std::to_string(game->GetScore(i));
+				SDL_DestroyTexture(this->score_text_tex[i]);
+				this->score_text_tex[i] = LoadText(score_text.c_str(), this->ren, Global::GAME::SCORE_FONT_SIZE, "font", 255, 255, 255);
+			}
 		}
 		game->UpdateTurn();
 	}
+	
 	return 0;
 }
 
@@ -128,7 +127,7 @@ int GameScene::ProcessInit() {
 }
 
 int GameScene::EventProcess(Event& evt) {
-	if (!is_moving) {
+	if (!game->IsMoving()) {
 		double mouse_x = evt.x;
 		double mouse_y = evt.y;
 

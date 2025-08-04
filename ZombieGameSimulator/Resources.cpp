@@ -12,6 +12,7 @@ SDL_Texture* Resources::tile_normal = nullptr;
 SDL_Texture* Resources::tile_papal = nullptr;
 SDL_Texture* Resources::tile_teleport = nullptr;
 SDL_Texture* Resources::tile_event = nullptr;
+SDL_Texture* Resources::tile_obstacle = nullptr;
 
 SDL_Texture* Resources::player_human[6] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 SDL_Texture* Resources::player_zombie[6] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
@@ -26,6 +27,7 @@ void Resources::InitResources(SDL_Renderer* renderer) {
 	tile_papal = LoadImage("tile_papallado", renderer);
 	tile_teleport = LoadImage("tile_teleport", renderer);
 	tile_event = LoadImage("tile_event", renderer);
+	tile_obstacle = LoadImage("tile_obstacle", renderer);
 
 	for (char i = 0; i < 6; ++i) {
 		string human_name = "player_" + std::string(1, i + 'a');
@@ -45,6 +47,7 @@ void Resources::QuitResources() {
 	SDL_DestroyTexture(tile_papal);
 	SDL_DestroyTexture(tile_teleport);
 	SDL_DestroyTexture(tile_event);
+	SDL_DestroyTexture(tile_obstacle);
 	for (int i = 0; i < 6; ++i) {
 		SDL_DestroyTexture(player_human[i]);
 		SDL_DestroyTexture(player_zombie[i]);

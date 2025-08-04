@@ -20,7 +20,7 @@ private:
 
 	vector<Scene*> scene_list;
 
-	std::mutex mtx;
+	std::recursive_mutex  mtx;
 
 public:
 	class WindowData {

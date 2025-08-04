@@ -8,6 +8,7 @@ public:
 	static SDL_Texture* tile_papal;
 	static SDL_Texture* tile_teleport;
 	static SDL_Texture* tile_event;
+	static SDL_Texture* tile_obstacle;
 
 	static SDL_Texture* player_human[6];
 	static SDL_Texture* player_zombie[6];

@@ -65,6 +65,14 @@ void Hexagon::DrawHexagon(SDL_Renderer* ren) const {
 			filledPolygonRGBA(ren, vx, vy, 6, 227, 193, 129, 200);
 		}		
 		break;
+	case HEXAGON_OBSTACLE:
+		if (Global::SYSTEM::TEXTURE_RENDERING) {
+			SDL_RenderCopy(ren, Resources::tile_obstacle, NULL, &dst);
+		}
+		else {
+			filledPolygonRGBA(ren, vx, vy, 6, 150, 150, 150, 200);
+		}
+		break;
 	}
 
 	if (activated) {

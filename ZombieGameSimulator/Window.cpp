@@ -52,6 +52,7 @@ int Window::Execute() {
 int Window::AddScene(Scene* scene, int pos) {
 	this->mtx.lock();
 	if (find(this->scene_list.begin(), this->scene_list.end(), scene) != this->scene_list.end()) {
+		this->mtx.unlock();
 		return 1;
 	}
 	scene->RegisterRenderer(this->ren);
@@ -70,6 +71,7 @@ int Window::DeleteScene(Scene* scene) {
 	this->mtx.lock();
 	auto iter = find(this->scene_list.begin(), this->scene_list.end(), scene);
 	if (iter == this->scene_list.end()) {
+		this->mtx.unlock();
 		return 1;
 	}
 	delete *iter;

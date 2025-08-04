@@ -14,6 +14,8 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
+	srand((unsigned)time(nullptr));
+
 	SDL_Init(SDL_INIT_EVERYTHING);
 	TTF_Init();
 	IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
@@ -22,10 +24,10 @@ int main(int argc, char *argv[]) {
 	Window* win = new Window({"Zombie Game", Global::WIN::SCREEN_WIDTH, Global::WIN::SCREEN_HEIGHT, Global::WIN::FPS});
 	win->Execute();
 
-	Game game;
+	Game game(win);
 
 	Scene* scene;
-	scene = new GameScene(win, &game);
+	scene = new GameScene(&game);
 	win->AddScene(scene, 0);
 	scene = new BackgroundScene();
 	win->AddScene(scene, 1);
@@ -38,16 +40,6 @@ int main(int argc, char *argv[]) {
 		case QUIT:
 			run = false;
 			break;
-		}
-
-		if (Global::EVENT::CREATE_TRIGGER) {
-			scene = new EventScene(&game);
-			win->AddScene(scene, 0);
-			Global::EVENT::CREATE_TRIGGER = false;
-		}
-		else if (Global::EVENT::DELETE_TRIGGER) {
-			win->DeleteScene(scene);
-			Global::EVENT::DELETE_TRIGGER = false;
 		}
 	}
 	win->Destroy();
