@@ -1,12 +1,16 @@
 #include "Hexagon.h"
+#include <cmath>
+#include <Global.h>
 #include <Log.h>
+#include <Texture.h>
+#include <Resources.h>
 
 Hexagon::Hexagon(double x, double y) {
 	this->x = x;
 	this->y = y;
 
 	GetCenterPointFromHexagonCoordinate(x, y, center_x, center_y);
-	GetPointsFromHexagonCoordinate(x, y, circumradius, points);
+	GetPointsFromHexagonCoordinate(x, y, Global::GAME::HEXAGON_SIZE, points);
 }
 double Hexagon::GetX() const { return x; }
 double Hexagon::GetY() const { return y; }
@@ -22,18 +26,44 @@ void Hexagon::DrawHexagon(SDL_Renderer* ren) const {
 		vy[i] = points[i].y;
 	}
 
+	SDL_Rect dst;
+	dst.w = circumradius * 2;
+	dst.h = circumradius * 2;
+	dst.x = static_cast<int>(center_x - circumradius);
+	dst.y = static_cast<int>(center_y - circumradius);
+
 	switch (type) {
 	case HEXAGON_NORMAL:
-		filledPolygonRGBA(ren, vx, vy, 6, 0, 0, 0, 200);
+		if (Global::SYSTEM::TEXTURE_RENDERING) {;
+			SDL_RenderCopy(ren, Resources::tile_normal, NULL, &dst);
+		}
+		else {
+			filledPolygonRGBA(ren, vx, vy, 6, 0, 0, 0, 200);
+		}
 		break;
 	case HEXAGON_PAPAL:
-		filledPolygonRGBA(ren, vx, vy, 6, 129, 212, 227, 200);
+		if (Global::SYSTEM::TEXTURE_RENDERING) {
+			SDL_RenderCopy(ren, Resources::tile_papal, NULL, &dst);
+		}
+		else {
+			filledPolygonRGBA(ren, vx, vy, 6, 129, 212, 227, 200);
+		}
 		break;
 	case HEXAGON_TELEPORT:
-		filledPolygonRGBA(ren, vx, vy, 6, 199, 129, 227, 200);
+		if (Global::SYSTEM::TEXTURE_RENDERING) {
+			SDL_RenderCopy(ren, Resources::tile_teleport, NULL, &dst);
+		}
+		else {
+			filledPolygonRGBA(ren, vx, vy, 6, 199, 129, 227, 200);
+		}
 		break;
 	case HEXAGON_EVENT:
-		filledPolygonRGBA(ren, vx, vy, 6, 227, 193, 129, 200);
+		if (Global::SYSTEM::TEXTURE_RENDERING) {
+			SDL_RenderCopy(ren, Resources::tile_event, NULL, &dst);
+		}
+		else {
+			filledPolygonRGBA(ren, vx, vy, 6, 227, 193, 129, 200);
+		}		
 		break;
 	}
 
@@ -41,9 +71,9 @@ void Hexagon::DrawHexagon(SDL_Renderer* ren) const {
 		filledPolygonRGBA(ren, vx, vy, 6, 255, 255, 255, 100);
 	}
 
-	SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
-	SDL_RenderDrawLines(ren, points.data(), points.size());
-	SDL_RenderDrawLine(ren, points.back().x, points.back().y, points.front().x, points.front().y);
+	if (!Global::SYSTEM::TEXTURE_RENDERING) {
+		polygonColor(ren, vx, vy, 6, 0xFFFFFFFF);
+	}
 }
 
 void Hexagon::SetProperty(HexagonType type) {
@@ -51,12 +81,13 @@ void Hexagon::SetProperty(HexagonType type) {
 }
 
 void Hexagon::GetCenterPointFromHexagonCoordinate(double x, double y, double &pixel_x, double &pixel_y) {
-	pixel_x = x * apothem * 2.0 + 1280 / 2.0;
-	pixel_y = y* circumradius * 3.0 + 720 / 2.0;
+	pixel_x = x * apothem * 2.0 + Global::WIN::SCREEN_WIDTH_HALF;
+	pixel_y = y * circumradius * 3.0 + Global::WIN::SCREEN_HEIGHT_HALF;
 }
 
 void Hexagon::GetPointsFromCenterPoint(double center_x, double center_y, double radius, std::vector<SDL_Point>& points) {
 	points.resize(6);
+	radius = Global::WIN::SCREEN_WIDTH * radius / 1280.0;
 	for (int i = 0; i < 6; ++i) {
 		double angle = i * M_PI / 3.0 + M_PI / 6.0; // 60 degrees in radians
 		points[i].x = static_cast<int>(center_x + radius * cos(angle));

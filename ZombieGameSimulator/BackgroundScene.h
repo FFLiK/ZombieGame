@@ -6,10 +6,15 @@ class BackgroundScene : public Scene {
 public:
 	BackgroundScene();
 	~BackgroundScene();
-	int Rendering();
+	int Rendering() override;
 	
 private:
-	int EventProcess(Event& evt);
-	int NormalProcess();
+	SDL_Texture* title_tex = nullptr;
+	SDL_Texture* version_tex = nullptr;
+	SDL_Texture* developer_tex = nullptr;
+
+	int ProcessInit() override;
+	int EventProcess(Event& evt) override;
+	int NormalProcess() override;
 };
 

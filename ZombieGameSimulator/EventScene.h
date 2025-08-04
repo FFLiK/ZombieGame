@@ -6,12 +6,13 @@ class EventScene : public Scene {
 public:
 	EventScene(Game* game);
 	~EventScene();
-	int Rendering();
+	int Rendering() override;
 
 private:
-	int EventProcess(Event& evt);
-	int NormalProcess();
+	int ProcessInit() override;
+	int EventProcess(Event& evt) override;
+	int NormalProcess() override;
 
-	Game* game;
+	Game* game = nullptr;
 };
 

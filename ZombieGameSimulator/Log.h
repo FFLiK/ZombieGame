@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <iostream>
+#include <Global.h>
 
 class Log {
 private:
@@ -15,15 +16,19 @@ private:
 
 public:
 	template<typename... Ts> static void FormattedDebug(std::string class_name, std::string function_name, Ts... args) {
-		std::cout << "[Debug Log] " + class_name + "::" + function_name + "(...)" + " - ";
-		if (sizeof...(args)) Log::_Print(args...);
-		else std::cout << std::endl;
+		if (Global::SYSTEM::DEBUG_MODE) {
+			std::cout << "[Debug Log] " + class_name + "::" + function_name + "(...)" + " - ";
+			if (sizeof...(args)) Log::_Print(args...);
+			else std::cout << std::endl;
+		}
 	}
 
 	template<typename... Ts> static void Debug(Ts ...args) {
-		std::cout << "[Debug Log] ";
-		if (sizeof...(args)) Log::_Print(args...);
-		else std::cout << std::endl;
+		if (Global::SYSTEM::DEBUG_MODE) {
+			std::cout << "[Debug Log] ";
+			if (sizeof...(args)) Log::_Print(args...);
+			else std::cout << std::endl;
+		}
 	}
 
 	template<typename... Ts> static void Error(Ts ...args) {

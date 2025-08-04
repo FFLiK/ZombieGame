@@ -1,5 +1,9 @@
 #include "Game.h"
 #include <Log.h>
+#include <Global.h>
+#include <Resources.h>
+#include <Texture.h>
+#include <Input.h>
 
 Game::Game() {
 	Log::System("Initializing game...");
@@ -23,18 +27,19 @@ Game::Game() {
 	GetHexagon(2, -2)->SetProperty(HEXAGON_TELEPORT);
 
 	Log::System("Setting up players...");
-	players.emplace_back(PLAYER_HUMAN, -2, -2);
-	players.emplace_back(PLAYER_HUMAN, 2, -2);
-	players.emplace_back(PLAYER_HUMAN, 4, 0);
-	players.emplace_back(PLAYER_HUMAN, 2, 2);
-	players.emplace_back(PLAYER_HUMAN, -2, 2);
-	players.emplace_back(PLAYER_HUMAN, -4, 0);
-	players.emplace_back(PLAYER_SUPER_ZOMBIE, 0, 0);
+	players.emplace_back(PLAYER_HUMAN, -2, -2, 0);
+	players.emplace_back(PLAYER_HUMAN, 2, -2, 1);
+	players.emplace_back(PLAYER_HUMAN, 4, 0, 2);
+	players.emplace_back(PLAYER_HUMAN, 2, 2, 3);
+	players.emplace_back(PLAYER_HUMAN, -2, 2, 4);
+	players.emplace_back(PLAYER_HUMAN, -4, 0, 5);
+	players.emplace_back(PLAYER_SUPER_ZOMBIE, 0, 0, -1);
 
 	current_turn = 0;
 
 	this->teleporting_player = nullptr;
 	this->event_triggered_player = nullptr;
+	this->zombie_infection_score = nullptr;
 
 	Log::System("Game setup completed.");
 }
@@ -75,6 +80,28 @@ int Game::GetCurrentTurn() const {
 	return current_turn;
 }
 
+int Game::GetScore(int index) const {
+	return (index >= 0 && index < score.size()) ? score[index] : 0;
+}
+
+void Game::Start() {
+	this->teleporting_player = nullptr;
+	this->event_triggered_player = nullptr;
+	this->zombie_infection_score = nullptr;
+
+	current_turn = 0;
+
+	this->timer = clock();
+	
+	score.clear();
+	score.reserve(players.size());
+	for (int i = 0; i < players.size(); ++i) {
+		score.push_back(0);
+	}
+
+	Log::System("Game started. Current turn: " + std::to_string(current_turn));
+}
+
 bool Game::Check(double cur_x, double cur_y, double tarGet_x, double tarGet_y, int step, bool first_move, Hexagon* hexagon, Player* player, std::vector<Hexagon*>* path) {
 	auto p = this->GetPlayer(cur_x, cur_y);
 	auto h = this->GetHexagon(cur_x, cur_y);
@@ -87,19 +114,13 @@ bool Game::Check(double cur_x, double cur_y, double tarGet_x, double tarGet_y, i
 	if (!first_move && (player->GetState() == PLAYER_HUMAN || player->GetState() == PLAYER_SUPER_ZOMBIE) && h->GetProperty() == HEXAGON_PAPAL) {
 		return false;
 	}
-	// Constraint 2 : Zombie cannot crossover to papal hexagons, but can move to them
+	// Constraint 2 : Zombie cannot crossover to papal hexagons, but can move to them if there is other player.
 	if (!first_move && player->GetState() == PLAYER_ZOMBIE && h->GetProperty() == HEXAGON_PAPAL) {
-		if (step > 0) {
+		if (step > 0 || p != nullptr) {
 			return false; // Cannot crossover, but can move to it
 		}
 	}
-	// ELIMINATED : Constraint 2 : Zombies cannot move or crossover to teleport hexagons~~~
-	/*
-	if (!first_move && (player->GetState() == PLAYER_ZOMBIE || player->GetState() == PLAYER_SUPER_ZOMBIE) && h->GetProperty() == HEXAGON_TELEPORT) {
-		return false;
-	}
-	*/
-	// Constraint 3 : Players cannot move or crossover the other player's hexagon
+	// Constraint 3 : Human players cannot move or crossover the other player's hexagon
 	if (!first_move && p != nullptr && !(player->GetState() != PLAYER_HUMAN && p->GetState() == PLAYER_HUMAN && step == 0)) {
 		return false;
 	}
@@ -213,6 +234,8 @@ void Game::Move(double x, double y) {
 	Player* player = GetCurrentPlayer();
 	Hexagon* hexagon = GetHexagon(x, y);
 
+	this->pause_timer = clock();
+
 	if(teleporting_player != nullptr) {
 		std::vector<Hexagon*> path;
 		path.push_back(hexagon);
@@ -229,10 +252,35 @@ void Game::Move(double x, double y) {
 		player->SetPosition(x, y, &path);
 		Log::System("Player moved to hexagon (" + std::to_string(x) + ", " + std::to_string(y) + ")");
 	
+		if (player->GetState() == PLAYER_HUMAN) {
+			int human_num = 0;
+			for (auto& p : players) {
+				if (p.GetState() == PLAYER_HUMAN) {
+					human_num++;
+				}
+			}
+			if (human_num == 1) {
+				score[player->GetIndex()] += Global::GAME::FINAL_HUMAN_MOVING_SCORE;
+				Log::System("Player at hexagon (" + std::to_string(x) + ", " + std::to_string(y) + ") is the last human. Score updated to", score[player->GetIndex()], "(+" + std::to_string(Global::GAME::FINAL_HUMAN_MOVING_SCORE)+")");
+			}
+			else {
+				score[player->GetIndex()] += Global::GAME::HUMAN_MOVING_SCORE;
+				Log::System("Player at hexagon (" + std::to_string(x) + ", " + std::to_string(y) + ") moved. Score updated to", score[player->GetIndex()], "(+" + std::to_string(Global::GAME::HUMAN_MOVING_SCORE) + ")");
+			}
+		}
+
 		if (player->GetState() == PLAYER_SUPER_ZOMBIE || player->GetState() == PLAYER_ZOMBIE) {
 			if (prev_player != nullptr && prev_player->GetState() == PLAYER_HUMAN) {
 				prev_player->SetState(PLAYER_ZOMBIE);
 				Log::System("Player at hexagon (" + std::to_string(x) + ", " + std::to_string(y) + ") turned into a zombie.");
+
+				if (player->GetState() == PLAYER_SUPER_ZOMBIE) {
+					score[prev_player->GetIndex()] += Global::GAME::INFECTED_SUPER_ZOMBIE_PENALTY_SCORE;
+					Log::System("Player at hexagon (" + std::to_string(x) + ", " + std::to_string(y) + ") infected by super zombie. Score updated to", score[prev_player->GetIndex()], "(" + std::to_string(Global::GAME::INFECTED_SUPER_ZOMBIE_PENALTY_SCORE) + ")");
+				}
+				else {
+					zombie_infection_score = &score[prev_player->GetIndex()];
+				}
 			}
 		}
 		if (player->GetState() == PLAYER_HUMAN && hexagon->GetProperty() == HEXAGON_TELEPORT) {
@@ -286,8 +334,20 @@ void Game::UpdateTurn() {
 	for (auto& player : this->players) {
 		player.UpdateState();
 	}
+	if (this->zombie_infection_score != nullptr) {
+		auto player = GetCurrentPlayer();
+		int input = Input::GetInputInt("Enter the zombie infection score for player " + std::to_string(player->GetIndex()), 1, 4);
+		*this->zombie_infection_score += input;
+		Log::System("Player at hexagon (" + std::to_string(player->GetX()) + ", " + std::to_string(player->GetY()) + ") infected by zombie. Score updated to", *this->zombie_infection_score, "(+" + std::to_string(input) + ")");
+		this->zombie_infection_score = nullptr;
+	}
 	if (this->teleporting_player == nullptr && this->event_triggered_player == nullptr) {
 		current_turn = (current_turn + 1) % players.size();
+
+		timer = clock();
+		pause_timer = 0;
+
+		Log::System("Updated turn to player " + std::to_string(current_turn) + " at hexagon (" + std::to_string(players[current_turn].GetX()) + ", " + std::to_string(players[current_turn].GetY()) + ").");
 	}
 }
 
@@ -299,10 +359,28 @@ void Game::ExecuteEvent() {
 	if (event_triggered_player == nullptr) {
 		return;
 	}
-	Log::System("Executing event for player at hexagon (" + std::to_string(event_triggered_player->GetX()) + ", " + std::to_string(event_triggered_player->GetY()) + ").");
+	if (!Global::EVENT::CALLED) {
+		Log::System("Executing event for player at hexagon (" + std::to_string(event_triggered_player->GetX()) + ", " + std::to_string(event_triggered_player->GetY()) + ").");
+		Global::EVENT::CALLED = true;
+		Global::EVENT::CREATE_TRIGGER = true;
+	}
+	if (Global::EVENT::FINISHED) {
+		GetHexagon(this->event_triggered_player->GetX(), this->event_triggered_player->GetY())->SetProperty(HEXAGON_NORMAL);
+		GetHexagon(players[SUPER_ZOMBIE_INDEX].GetX(), players[SUPER_ZOMBIE_INDEX].GetY())->SetProperty(HEXAGON_EVENT);
+		event_triggered_player = nullptr;
+		Global::EVENT::CALLED = false;
+	}
+}
 
-	GetHexagon(this->event_triggered_player->GetX(), this->event_triggered_player->GetY())->SetProperty(HEXAGON_NORMAL);
-	GetHexagon(players[SUPER_ZOMBIE_INDEX].GetX(), players[SUPER_ZOMBIE_INDEX].GetY())->SetProperty(HEXAGON_EVENT);
-	
-	event_triggered_player = nullptr;
+int Game::LeftTimerTick() {
+	if (this->timer == 0) {
+		return Global::GAME::TIME_LIMIT;
+	}
+	int current_time = this->pause_timer == 0 ? clock() : this->pause_timer;
+	int elapsed_time = (current_time - this->timer) / CLOCKS_PER_SEC;
+	int remaining_time = Global::GAME::TIME_LIMIT - elapsed_time;
+	if (remaining_time < 0) {
+		remaining_time = 0;
+	}
+	return remaining_time;
 }

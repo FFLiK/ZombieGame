@@ -2,6 +2,8 @@
 #include <ctime>
 #include <thread>
 #include <Log.h>
+#include <Texture.h>
+#include <Resources.h>
 
 Window::Window(WindowData w_dat) {
 	Log::FormattedDebug("Window", "Constructor", "Calling constructor of Window with title: " + w_dat.title + ", width: " + std::to_string(w_dat.width) + ", height: " + std::to_string(w_dat.height) + ", fps: " + std::to_string(w_dat.fps));
@@ -53,6 +55,7 @@ int Window::AddScene(Scene* scene, int pos) {
 		return 1;
 	}
 	scene->RegisterRenderer(this->ren);
+	scene->ProcessInit();
 	if (pos == -1) {
 		this->scene_list.push_back(scene);
 	}
@@ -77,6 +80,12 @@ int Window::DeleteScene(Scene* scene) {
 }
 
 void Window::__Process__() {
+	if (Global::SYSTEM::TEXTURE_RENDERING) {
+		this->mtx.lock();
+		InitLoadTextureLibrary(this->ren);
+		Resources::InitResources(this->ren);
+		this->mtx.unlock();
+	}
 	int prev = this->RunTime() * 1000;
 	while (this->run) {
 		this->mtx.lock();
@@ -94,6 +103,10 @@ void Window::__Process__() {
 			this->scene_list[i]->__Process__();
 		}
 		this->mtx.unlock();
+	}
+	if (Global::SYSTEM::TEXTURE_RENDERING) {
+		Resources::QuitResources();
+		QuitLoadTextureLibrary();
 	}
 	this->rendering_completed = true;
 }

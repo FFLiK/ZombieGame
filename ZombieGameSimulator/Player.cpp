@@ -1,14 +1,26 @@
 #include "Player.h"
 #include "Hexagon.h"
 #include "Log.h"
+#include "Global.h"
+#include "Resources.h"
+#include "Texture.h"
 
-Player::Player(PlayerState state, double x, double y) {
+Player::Player(PlayerState state, double x, double y, int index) {
 	this->x = x;
 	this->y = y;
 	this->state = state;
 	this->reserved_state = state;
 
+	this->index = index;
+
 	Hexagon::GetCenterPointFromHexagonCoordinate(x, y, this->center_x, this->center_y);
+}
+
+Player::~Player() {
+	if (this->index_tex != nullptr) {
+		SDL_DestroyTexture(this->index_tex);
+		this->index_tex = nullptr;
+	}
 }
 
 double Player::GetX() const {
@@ -23,72 +35,171 @@ PlayerState Player::GetState() const {
 	return this->state;
 }
 
-void Player::DrawPlayer(SDL_Renderer* ren, bool activated, bool draw_left, bool draw_right) const {
+int Player::GetIndex() const {
+	return this->index;
+}
+
+void Player::DrawPlayer(SDL_Renderer* ren, bool activated, bool draw_left, bool draw_right) {
+	if (this->index_tex == nullptr) {
+		this->index_tex = LoadText(std::to_string(this->index + 1).c_str(), ren, Global::GAME::PLAYER_FONT_SIZE, "font", 255, 255, 255);
+	}
+	
 	std::vector <SDL_Point> points;
+	SDL_Rect src, dst;
 
-	switch (this->state) {
-	case PLAYER_HUMAN:
-		Hexagon::GetPointsFromCenterPoint(this->center_x, this->center_y, Player::PLAYER_SIZE, points);
-		Sint16 vx[6], vy[6];
-		for (size_t i = 0; i < 6; ++i) {
-			vx[i] = points[i].x;
-			vy[i] = points[i].y;
+	if (Global::SYSTEM::TEXTURE_RENDERING) {
+		switch (this->state) {
+		case PLAYER_HUMAN:
+			Hexagon::GetPointsFromCenterPoint(this->center_x, this->center_y, Global::GAME::PLAYER_SIZE, points);
+			SDL_QueryTexture(Resources::player_human[this->index], NULL, NULL, &src.w, &src.h);
+			src.x = 0;
+			src.y = 0;
+			if (!draw_left && draw_right) {
+				src.x = src.w / 2;
+			}
+			else if (draw_left && !draw_right) {
+				src.x = 0;
+				src.w = src.w / 2;
+			}
+			
+			dst.w = points[1].y - points[4].y;
+			dst.h = dst.w;
+			dst.x = static_cast<int>(this->center_x - dst.w / 2);
+			dst.y = static_cast<int>(this->center_y - dst.h / 2);
+			if (!draw_left && draw_right) {
+				dst.x += dst.w / 2;
+				dst.w = dst.w / 2;
+			}
+			else if (draw_left && !draw_right) {
+				dst.w = dst.w / 2;
+			}
+			SDL_RenderCopy(ren, Resources::player_human[this->index], &src, &dst);
+			break;
+
+		case PLAYER_ZOMBIE:
+			Hexagon::GetPointsFromCenterPoint(this->center_x, this->center_y, Global::GAME::PLAYER_SIZE, points);
+			SDL_QueryTexture(Resources::player_zombie[this->index], NULL, NULL, &src.w, &src.h);
+			src.x = 0;
+			src.y = 0;
+			if (!draw_left && draw_right) {
+				src.x = src.w / 2;
+			}
+			else if (draw_left && !draw_right) {
+				src.x = 0;
+				src.w = src.w / 2;
+			}
+
+			dst.w = points[1].y - points[4].y;
+			dst.h = dst.w;
+			dst.x = static_cast<int>(this->center_x - dst.w / 2);
+			dst.y = static_cast<int>(this->center_y - dst.h / 2);
+			if (!draw_left && draw_right) {
+				dst.x += dst.w / 2;
+				dst.w = dst.w / 2;
+			}
+			else if (draw_left && !draw_right) {
+				dst.w = dst.w / 2;
+			}
+
+			SDL_RenderCopy(ren, Resources::player_zombie[this->index], &src, &dst);
+			break;
+
+		case PLAYER_SUPER_ZOMBIE:
+			Hexagon::GetPointsFromCenterPoint(this->center_x, this->center_y, Global::GAME::SUPER_ZOMBIE_SIZE, points);
+			
+			dst.w = points[1].y - points[4].y;
+			dst.h = dst.w;
+			dst.x = static_cast<int>(this->center_x - dst.w / 2);
+			dst.y = static_cast<int>(this->center_y - dst.h / 2);
+			
+			SDL_RenderCopy(ren, Resources::player_super_zombie, NULL, &dst);
+			break;
 		}
+	}
+	else {
+		switch (this->state) {
+		case PLAYER_HUMAN:
+			Hexagon::GetPointsFromCenterPoint(this->center_x, this->center_y, Global::GAME::PLAYER_SIZE, points);
+			Sint16 vx[6], vy[6];
+			for (size_t i = 0; i < 6; ++i) {
+				vx[i] = points[i].x;
+				vy[i] = points[i].y;
+			}
 
+			if (!draw_left && draw_right) {
+				vx[2] = vx[1];
+				vx[3] = vx[1];
+			}
+			else if (draw_left && !draw_right) {
+				vx[0] = vx[4];
+				vx[5] = vx[4];
+			}
+
+			filledPolygonRGBA(ren, vx, vy, 6, 150, 150, 150, 255);
+			if (activated) {
+				polygonColor(ren, vx, vy, 6, 0xFF0000FF);
+			}
+			else {
+				polygonColor(ren, vx, vy, 6, 0xFFFFFFFF);
+			}
+			break;
+		case PLAYER_ZOMBIE:
+			Hexagon::GetPointsFromCenterPoint(this->center_x, this->center_y, Global::GAME::PLAYER_SIZE, points);
+			for (size_t i = 0; i < 6; ++i) {
+				vx[i] = points[i].x;
+				vy[i] = points[i].y;
+			}
+
+			if (!draw_left && draw_right) {
+				vx[2] = vx[1];
+				vx[3] = vx[1];
+			}
+			else if (draw_left && !draw_right) {
+				vx[0] = vx[4];
+				vx[5] = vx[4];
+			}
+
+			filledPolygonRGBA(ren, vx, vy, 6, 150, 190, 40, 255);
+			if (activated) {
+				polygonColor(ren, vx, vy, 6, 0xFF0000FF);
+			}
+			else {
+				polygonColor(ren, vx, vy, 6, 0xFFFFFFFF);
+			}
+			break;
+		case PLAYER_SUPER_ZOMBIE:
+			Hexagon::GetPointsFromCenterPoint(this->center_x, this->center_y, Global::GAME::SUPER_ZOMBIE_SIZE, points);
+			for (size_t i = 0; i < 6; ++i) {
+				vx[i] = points[i].x;
+				vy[i] = points[i].y;
+			}
+			filledPolygonRGBA(ren, vx, vy, 6, 150, 190, 40, 255);
+			if (activated) {
+				polygonColor(ren, vx, vy, 6, 0xFF0000FF);
+			}
+			else {
+				polygonColor(ren, vx, vy, 6, 0xFFFFFFFF);
+			}
+			break;
+		}
+	}
+
+	if (this->state != PLAYER_SUPER_ZOMBIE) {
+		SDL_QueryTexture(this->index_tex, NULL, NULL, &src.w, &src.h);
+		src.x = 0;
+		src.y = 0;
+		dst.w = src.w;
+		dst.h = src.h;
+		dst.x = static_cast<int>(this->center_x - dst.w / 2);
+		dst.y = static_cast<int>(this->center_y - dst.h / 2);
+		double w = points[1].y - points[4].y;
 		if (!draw_left && draw_right) {
-			vx[0] = vx[1];
-			vx[5] = vx[1];
+			dst.x = static_cast<int>(this->center_x + w / 4 - dst.w / 2);
 		}
 		else if (draw_left && !draw_right) {
-			vx[2] = vx[4];
-			vx[3] = vx[4];
+			dst.x = static_cast<int>(this->center_x - w / 4 - dst.w / 2);
 		}
-
-		filledPolygonRGBA(ren, vx, vy, 6, 150, 150, 150, 255);
-		if (activated) {
-			polygonColor(ren, vx, vy, 6, 0xFF0000FF);
-		}
-		else {
-			polygonColor(ren, vx, vy, 6, 0xFFFFFFFF);
-		}
-		break;
-	case PLAYER_ZOMBIE:
-		Hexagon::GetPointsFromCenterPoint(this->center_x, this->center_y, Player::PLAYER_SIZE, points);
-		for (size_t i = 0; i < 6; ++i) {
-			vx[i] = points[i].x;
-			vy[i] = points[i].y;
-		}
-
-		if (!draw_left && draw_right) {
-			vx[0] = vx[1];
-			vx[5] = vx[1];
-		}
-		else if (draw_left && !draw_right) {
-			vx[2] = vx[4];
-			vx[3] = vx[4];
-		}
-
-		filledPolygonRGBA(ren, vx, vy, 6, 150, 190, 40, 255);
-		if (activated) {
-			polygonColor(ren, vx, vy, 6, 0xFF0000FF);
-		}
-		else {
-			polygonColor(ren, vx, vy, 6, 0xFFFFFFFF);
-		}		
-		break;
-	case PLAYER_SUPER_ZOMBIE:
-		Hexagon::GetPointsFromCenterPoint(this->center_x, this->center_y, Player::SUPER_ZOMBIE_SIZE, points);
-		for (size_t i = 0; i < 6; ++i) {
-			vx[i] = points[i].x;
-			vy[i] = points[i].y;
-		}
-		filledPolygonRGBA(ren, vx, vy, 6, 150, 190, 40, 255);
-		if (activated) {
-			polygonColor(ren, vx, vy, 6, 0xFF0000FF);
-		}
-		else {
-			polygonColor(ren, vx, vy, 6, 0xFFFFFFFF);
-		}		break;
+		SDL_RenderCopy(ren, this->index_tex, &src, &dst);
 	}
 }
 

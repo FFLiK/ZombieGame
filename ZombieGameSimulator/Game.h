@@ -15,6 +15,13 @@ private:
 	Player* teleporting_player;
 	Player* event_triggered_player;
 
+	int timer;
+	int pause_timer = 0;
+	
+	int* zombie_infection_score = nullptr;
+
+	std::vector<int> score;
+
 public:
 	inline static const int SUPER_ZOMBIE_INDEX = 6;
 
@@ -26,6 +33,9 @@ public:
 	Player* GetPlayer(double x, double y);
 	Player* GetCurrentPlayer();
 	int GetCurrentTurn() const;
+	int GetScore(int index) const;
+
+	void Start();
 
 	bool IsMovable(Hexagon* hexagon, Player* player, std::vector<Hexagon*>* path = nullptr);
 	void Move(double x, double y);
@@ -34,5 +44,7 @@ public:
 
 	bool IsEventTriggered();
 	void ExecuteEvent();
+
+	int LeftTimerTick();
 };
 

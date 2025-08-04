@@ -10,6 +10,7 @@ public:
 	Scene();
 	virtual ~Scene();
 
+	virtual int ProcessInit() abstract;
 	virtual int Rendering() abstract;
 	virtual int EventProcess(Event& evt) abstract;
 	virtual int NormalProcess() abstract;

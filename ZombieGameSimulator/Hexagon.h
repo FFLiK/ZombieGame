@@ -2,6 +2,7 @@
 #include <SDL.h>
 #include <SDL2_gfxPrimitives.h>
 #include <vector>
+#include "Global.h"
 
 enum HexagonType {
 	HEXAGON_NORMAL,
@@ -12,7 +13,7 @@ enum HexagonType {
 
 class Hexagon {
 private:
-	inline static const double circumradius = 35;
+	inline static const double circumradius = Global::WIN::SCREEN_WIDTH * Global::GAME::HEXAGON_SIZE / 1280.0;
 	inline static const double apothem = circumradius * 0.86602540378;
 
 	double x, y;
