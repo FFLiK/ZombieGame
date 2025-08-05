@@ -17,6 +17,7 @@ private:
 
 	Game* game;
 	std::vector<Hexagon*> path;
+	std::vector<int> score_copy;
 
 	SDL_Texture* timer_title_tex = nullptr;
 	SDL_Texture* score_title_tex = nullptr;

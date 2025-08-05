@@ -5,12 +5,16 @@
 #include "Global.h"
 #include "Input.h"
 #include "Hexagon.h"
+#include <random>
 
 EventScene::EventScene(Game* game) {
 	this->game = game;
 	Log::FormattedDebug("EventScene", "Constructor", "Calling constructor of EventScene");
 
-	this->game_event = static_cast<GameEvent>(rand() % 9);
+	std::mt19937 rng(std::random_device{}());
+
+	std::uniform_int_distribution<int> dist(0, 8);
+	this->game_event = static_cast<GameEvent>(dist(rng));
 
 	this->background_alpha = 0;
 	this->current_text = nullptr;

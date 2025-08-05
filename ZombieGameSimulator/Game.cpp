@@ -36,7 +36,7 @@ Game::Game(Window *win) {
 	players.emplace_back(PLAYER_HUMAN, -4, 0, 5);
 	players.emplace_back(PLAYER_SUPER_ZOMBIE, 0, 0, -1);
 
-	current_turn = 0;
+	this->current_turn = -1;
 
 	this->teleporting_player = nullptr;
 	this->event_triggered_player = nullptr;
@@ -44,6 +44,7 @@ Game::Game(Window *win) {
 
 	this->win = win;
 	this->event_scene = nullptr;
+	this->is_started = false;
 
 	score.clear();
 	for (int i = 0; i < players.size(); ++i) {
@@ -51,6 +52,7 @@ Game::Game(Window *win) {
 	}
 
 	Log::System("Game setup completed.");
+	Log::System("Press SPACE to start the game.");
 }
 
 std::vector<Hexagon>* Game::GetHexagons() {
@@ -82,7 +84,10 @@ Player* Game::GetPlayer(double x, double y) {
 }
 
 Player* Game::GetCurrentPlayer() {
-	return &players[current_turn];
+	if (current_turn >= 0 && current_turn < players.size()) {
+		return &players[current_turn];
+	}
+	return nullptr;
 }
 
 int Game::GetCurrentTurn() const {
@@ -95,6 +100,8 @@ int Game::GetScore(int index) const {
 
 void Game::Start() {
 	this->timer = clock();
+	this->is_started = true;
+	this->current_turn = 0;
 	Log::System("Game started. Current turn: " + std::to_string(current_turn));
 }
 
@@ -421,4 +428,8 @@ int Game::LeftTimerTick() {
 		remaining_time = 0;
 	}
 	return remaining_time;
+}
+
+bool Game::IsStarted() const {
+	return this->is_started;
 }

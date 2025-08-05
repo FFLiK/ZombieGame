@@ -97,9 +97,11 @@ int GameScene::Rendering() {
 	if (game->HaveToUpdate()) {
 		if (game->IsEventTriggered()) {
 			game->ExecuteEvent();
-		} else {
-			for (int i = 0; i < game->GetPlayers()->size() - 1; i++) {
-				std::string score_text = "Group " + std::to_string(i + 1) + " : " + std::to_string(game->GetScore(i));
+		}
+		for (int i = 0; i < game->GetPlayers()->size() - 1; i++) {
+			if (game->GetScore(i) != this->score_copy[i]) {
+				this->score_copy[i] = game->GetScore(i);
+				std::string score_text = "Team " + std::to_string(i + 1) + " : " + std::to_string(game->GetScore(i));
 				SDL_DestroyTexture(this->score_text_tex[i]);
 				this->score_text_tex[i] = LoadText(score_text.c_str(), this->ren, Global::GAME::SCORE_FONT_SIZE, "font", 255, 255, 255);
 			}
@@ -112,22 +114,32 @@ int GameScene::Rendering() {
 
 
 int GameScene::ProcessInit() {
+	this->path.clear();
+	this->timer_text_tex.clear();
+	this->score_text_tex.clear();
+	this->score_copy.clear();
 	for (int i = 0; i <= Global::GAME::TIME_LIMIT; i++) {
 		std::string timer_text = std::to_string(i);
 		this->timer_text_tex.push_back(LoadText(timer_text.c_str(), this->ren, Global::GAME::TIMER_FONT_SIZE, "font", 255, 255, 255));
 	}
 	for (int i = 0; i < game->GetPlayers()->size() - 1; i++) {
-		std::string score_text = "Group " + std::to_string(i + 1) + " : " + std::to_string(game->GetScore(i));
+		std::string score_text = "Team " + std::to_string(i + 1) + " : " + std::to_string(game->GetScore(i));
 		this->score_text_tex.push_back(LoadText(score_text.c_str(), this->ren, Global::GAME::SCORE_FONT_SIZE, "font", 255, 255, 255));
+		this->score_copy.push_back(game->GetScore(i));
 	}
 	this->timer_title_tex = LoadText("Timer.", this->ren, Global::GAME::TIMER_FONT_SIZE * 0.5, "font", 255, 255, 255);
 	this->score_title_tex = LoadText("Score.", this->ren, Global::GAME::SCORE_FONT_SIZE * 2.0, "font", 255, 255, 255);
-
 	return 0;
 }
 
 int GameScene::EventProcess(Event& evt) {
-	if (!game->IsMoving()) {
+	if (!game->IsStarted()) {
+		if (evt.T == KEY_UP && evt.key == SDLK_SPACE) {
+			game->Start();
+			Log::System("Game started.");
+		}
+	}
+	else if (!game->IsMoving()) {
 		double mouse_x = evt.x;
 		double mouse_y = evt.y;
 

@@ -10,7 +10,7 @@ private:
 	std::vector<Hexagon> hexagons;
 	std::vector<Player> players;
 
-	int current_turn = 0;
+	int current_turn = -1;
 
 	bool Check(double cur_x, double cur_y, double target_x, double target_y, int step, bool first_move, Hexagon* hexagon, Player* player, std::vector<Hexagon*>* path);
 
@@ -57,6 +57,8 @@ public:
 	void ExecuteEvent();
 
 	int LeftTimerTick();
+
+	bool IsStarted() const;
 
 	friend class EventScene;
 };

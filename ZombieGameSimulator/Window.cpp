@@ -13,7 +13,7 @@ Window::Window(WindowData w_dat) {
 	this->run = true;
 	this->rendering_completed = false;
 	this->win = SDL_CreateWindow(w_dat.title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w_dat.width, w_dat.height, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
-	this->ren = SDL_CreateRenderer(this->win, -1, SDL_RENDERER_ACCELERATED);
+	this->ren = nullptr;
 	this->fps = w_dat.fps;
 	this->windows_created_time = clock();
 
@@ -85,12 +85,14 @@ int Window::DeleteScene(Scene* scene) {
 }
 
 void Window::__Process__() {
+	this->scene_mtx.lock();
+	this->ren = SDL_CreateRenderer(this->win, -1, SDL_RENDERER_ACCELERATED);
 	if (Global::SYSTEM::TEXTURE_RENDERING) {
-		this->scene_mtx.lock();
 		InitLoadTextureLibrary(this->ren);
 		Resources::InitResources(this->ren);
-		this->scene_mtx.unlock();
 	}
+	this->scene_mtx.unlock();
+	
 	int prev = this->RunTime() * 1000;
 	while (this->run) {
 		this->scene_mtx.lock();
@@ -146,11 +148,12 @@ EventType Window::PollEvent() {
 		}
 		else if (this->evt.key.keysym.sym == SDLK_F11) {
 			if (!this->is_full_screen) {
-				//SDL_SetWindowFullscreen(this->win, 0);
+				SDL_SetWindowFullscreen(this->win, SDL_WINDOW_FULLSCREEN_DESKTOP);
+				SDL_RenderSetLogicalSize(this->ren, Global::WIN::SCREEN_WIDTH, Global::WIN::SCREEN_HEIGHT);
 				this->is_full_screen = true;
 			}
 			else {
-				//SDL_SetWindowFullscreen(this->win, SDL_WINDOW_FULLSCREEN_DESKTOP);
+				SDL_SetWindowFullscreen(this->win, 0);
 				this->is_full_screen = false;
 			}
 		}

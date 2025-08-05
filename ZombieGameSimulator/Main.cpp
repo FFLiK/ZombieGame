@@ -22,8 +22,6 @@ int main(int argc, char *argv[]) {
 	Log::System("Debug Mode:", Global::SYSTEM::DEBUG_MODE ? "True" : "False");
 	Log::System("Texture Rendering:", Global::SYSTEM::TEXTURE_RENDERING ? "True" : "False");
 
-	srand((unsigned)time(nullptr));
-
 	SDL_Init(SDL_INIT_EVERYTHING);
 	TTF_Init();
 	IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
@@ -39,8 +37,6 @@ int main(int argc, char *argv[]) {
 	win->AddScene(scene, 0);
 	scene = new BackgroundScene();
 	win->AddScene(scene, 1);
-
-	game.Start();
 
 	bool run = true;
 	while (run) {

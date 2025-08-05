@@ -149,9 +149,9 @@ SDL_Texture* LoadText(const char* str, SDL_Renderer* renderer, int size, const c
 	TTF_Font* font;
 	SDL_Surface* surface;
 	SDL_Texture* texture;
-	font = TTF_OpenFont(FONT(fontfile_name), size);
+	size = size * Global::WIN::SIZE_MULTIPLIER;
 
-	size = Global::WIN::SCREEN_WIDTH * size / 1280.0;
+	font = TTF_OpenFont(FONT(fontfile_name), size);
 
 	SDL_Color color;
 	color.r = r;
