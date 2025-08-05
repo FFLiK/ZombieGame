@@ -6,7 +6,7 @@
 #include <Input.h>
 #include <EventScene.h>
 
-Game::Game(Window *win) {
+Game::Game(Window *win) : rng(std::random_device{}()) {
 	Log::System("Initializing game...");
 
 	Log::System("Setting up the game board...");
@@ -51,8 +51,18 @@ Game::Game(Window *win) {
 		score.push_back(0);
 	}
 
+
 	Log::System("Game setup completed.");
 	Log::System("Press SPACE to start the game.");
+}
+
+Game::~Game() {
+	Log::System("Destroying game resources...");
+	if (this->event_scene) {
+		delete this->event_scene;
+		this->event_scene = nullptr;
+	}
+	Log::System("Game resources destroyed.");
 }
 
 std::vector<Hexagon>* Game::GetHexagons() {
@@ -405,12 +415,32 @@ void Game::ExecuteEvent() {
 		win->AddScene(this->event_scene, 0);
 	} 
 	else if (static_cast<EventScene*>(this->event_scene)->IsEnd()){
+		int hexagon_num = 0;
 		for (int i = 0; i < this->hexagons.size(); i++) {
 			if (this->hexagons[i].GetProperty() == HEXAGON_EVENT) {
 				this->hexagons[i].SetProperty(HEXAGON_NORMAL);
 			}
+			if (this->hexagons[i].GetProperty() == HEXAGON_NORMAL
+				&& this->GetPlayer(this->hexagons[i].GetX(), this->hexagons[i].GetY()) == nullptr) {
+				hexagon_num++;
+			}
 		}
-		GetHexagon(players[SUPER_ZOMBIE_INDEX].GetX(), players[SUPER_ZOMBIE_INDEX].GetY())->SetProperty(HEXAGON_EVENT);
+
+		std::uniform_int_distribution<int> dist(0, hexagon_num - 1);
+		int target_hexagon = dist(rng);
+
+		int cnt = 0;
+		for (int i = 0; i < this->hexagons.size(); i++) {
+			if (this->hexagons[i].GetProperty() == HEXAGON_NORMAL
+				&& this->GetPlayer(this->hexagons[i].GetX(), this->hexagons[i].GetY()) == nullptr) {
+				if (cnt == target_hexagon) {
+					this->hexagons[i].SetProperty(HEXAGON_EVENT);
+					break;
+				}
+				cnt++;
+			}
+		}
+
 		event_triggered_player = nullptr;
 		win->DeleteScene(this->event_scene);
 		this->event_scene = nullptr;

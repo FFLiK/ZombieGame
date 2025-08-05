@@ -161,6 +161,11 @@ int GameScene::EventProcess(Event& evt) {
 				}
 			}
 		}
+
+		if (evt.mouse == MOUSE_RIGHT && evt.T == MOUSE_UP) {
+			Log::System("Forced turn change by the right click.");
+			game->UpdateTurn();
+		}
 	}
 	return 0;
 }

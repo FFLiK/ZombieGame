@@ -179,12 +179,6 @@ int EventScene::Rendering() {
 			}
 			else {
 				this->pause = false;
-				if (this->target_hexagon->GetProperty() == HEXAGON_EVENT) {
-					this->game->GetHexagon(
-						(this->game->players[this->game->SUPER_ZOMBIE_INDEX]).GetX(),
-						(this->game->players[this->game->SUPER_ZOMBIE_INDEX]).GetY()
-					)->SetProperty(HEXAGON_EVENT);
-				}
 				this->target_hexagon->SetProperty(HEXAGON_OBSTACLE);
 				Log::System("EventScene", "Rendering", "Obstacle created at tile (" + std::to_string(this->target_hexagon->GetX()) + ", " + std::to_string(this->target_hexagon->GetY()) + ")");
 			}
@@ -219,7 +213,7 @@ int EventScene::ProcessInit() {
 
 	case GameEvent::SWAP_POSITION_WITH_TEAM:
 		event_main_text = "Swap positions with a chosen team.";
-		this->execute_event_level = 450 * Global::WIN::FRAME_RATE_MULTIPLIER + transition_level_delta;
+		this->execute_event_level = 450 * Global::WIN::FRAME_RATE_MULTIPLIER;
 		break;
 
 	case GameEvent::MOVE_SUPER_ZOMBIE_TO_TILE:

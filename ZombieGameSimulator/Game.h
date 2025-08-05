@@ -4,6 +4,7 @@
 #include <Player.h>
 #include <Window.h>
 #include <Scene.h>
+#include <random>
 
 class Game {
 private:
@@ -31,10 +32,13 @@ private:
 
 	bool is_started;
 
+	std::mt19937 rng;
+
 public:
 	inline static const int SUPER_ZOMBIE_INDEX = 6;
 
 	Game(Window *win);
+	~Game();
 
 	std::vector<Hexagon>* GetHexagons();
 	std::vector<Player>* GetPlayers();
