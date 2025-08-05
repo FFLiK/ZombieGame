@@ -46,7 +46,7 @@ private:
 	GameEvent game_event;
 
 	int level;
-	const int transition_level_delta = 40;
+	const int transition_level_delta = 40 * Global::WIN::FRAME_RATE_MULTIPLIER;
 	vector<Slide> slides;
 
 	int background_alpha = 0;

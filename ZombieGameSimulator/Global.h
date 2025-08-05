@@ -13,8 +13,7 @@ namespace Global {
 		static const int FPS = 60;
 
 		static constexpr double SIZE_MULTIPLIER = SCREEN_WIDTH / 1280.0;
-
-		static std::atomic<bool> FULL_SCREEN;
+		static constexpr double FRAME_RATE_MULTIPLIER = FPS / 60.0;
 	};
 
 	class GAME {
@@ -38,7 +37,7 @@ namespace Global {
 	public:
 		static constexpr const char* NAME = "The Last Human";
 		static constexpr const char* DEV_NAME = "Zombie Game";
-		static constexpr const char* VERSION = "1.0.0";
+		static constexpr const char* VERSION = "1.0.1";
 		static const bool IS_RELEASE = false;
 		static constexpr const char* DEVELOPER = "FFLiK";
 

@@ -127,10 +127,6 @@ int GameScene::ProcessInit() {
 }
 
 int GameScene::EventProcess(Event& evt) {
-	if (evt.T == KEY_UP && evt.key == SDLK_F11) {
-		Global::WIN::FULL_SCREEN = !Global::WIN::FULL_SCREEN;
-		return 0;
-	}
 	if (!game->IsMoving()) {
 		double mouse_x = evt.x;
 		double mouse_y = evt.y;

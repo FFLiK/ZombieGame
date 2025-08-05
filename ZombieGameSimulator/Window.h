@@ -20,9 +20,13 @@ private:
 
 	vector<Scene*> scene_list;
 
-	std::recursive_mutex  mtx;
+	std::recursive_mutex scene_mtx;
+	std::recursive_mutex event_mtx;
 
 	bool is_full_screen = false;
+
+	int frame_cnt;
+	int frame_time = 0;
 
 public:
 	class WindowData {

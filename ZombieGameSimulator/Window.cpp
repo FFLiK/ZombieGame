@@ -16,6 +16,9 @@ Window::Window(WindowData w_dat) {
 	this->ren = SDL_CreateRenderer(this->win, -1, SDL_RENDERER_ACCELERATED);
 	this->fps = w_dat.fps;
 	this->windows_created_time = clock();
+
+	this->frame_cnt = 0;
+	this->frame_time = this->windows_created_time;
 }
 
 Window::~Window() {
@@ -50,9 +53,9 @@ int Window::Execute() {
 }
 
 int Window::AddScene(Scene* scene, int pos) {
-	this->mtx.lock();
+	this->scene_mtx.lock();
 	if (find(this->scene_list.begin(), this->scene_list.end(), scene) != this->scene_list.end()) {
-		this->mtx.unlock();
+		this->scene_mtx.unlock();
 		return 1;
 	}
 	scene->RegisterRenderer(this->ren);
@@ -63,34 +66,34 @@ int Window::AddScene(Scene* scene, int pos) {
 	else {
 		this->scene_list.insert(this->scene_list.begin() + pos, scene);
 	}
-	this->mtx.unlock();
+	this->scene_mtx.unlock();
 	return 0;
 }
 
 int Window::DeleteScene(Scene* scene) {
-	this->mtx.lock();
+	this->scene_mtx.lock();
 	auto iter = find(this->scene_list.begin(), this->scene_list.end(), scene);
 	if (iter == this->scene_list.end()) {
-		this->mtx.unlock();
+		this->scene_mtx.unlock();
 		return 1;
 	}
 	delete *iter;
 	*iter = nullptr;
 	this->scene_list.erase(iter);
-	this->mtx.unlock();
+	this->scene_mtx.unlock();
 	return 0;
 }
 
 void Window::__Process__() {
 	if (Global::SYSTEM::TEXTURE_RENDERING) {
-		this->mtx.lock();
+		this->scene_mtx.lock();
 		InitLoadTextureLibrary(this->ren);
 		Resources::InitResources(this->ren);
-		this->mtx.unlock();
+		this->scene_mtx.unlock();
 	}
 	int prev = this->RunTime() * 1000;
 	while (this->run) {
-		this->mtx.lock();
+		this->scene_mtx.lock();
 		int delta = (this->RunTime() * 1000 - prev);
 		if (delta > 1000000 / this->fps) {
 			prev += 1000000 / this->fps;
@@ -100,17 +103,14 @@ void Window::__Process__() {
 			}
 			SDL_SetRenderDrawColor(this->ren, 0, 0, 0, 0);
 			SDL_RenderPresent(this->ren);
+			this->frame_cnt++;
 		}
+		this->event_mtx.lock();
 		for (int i = this->scene_list.size() - 1; i >= 0; i--) {
 			this->scene_list[i]->__Process__();
 		}
-		if (Global::WIN::FULL_SCREEN && !this->is_full_screen) {
-			this->is_full_screen = true;
-		}
-		else if (!Global::WIN::FULL_SCREEN && this->is_full_screen) {
-			this->is_full_screen = false;
-		}
-		this->mtx.unlock();
+		this->event_mtx.unlock();
+		this->scene_mtx.unlock();
 	}
 	if (Global::SYSTEM::TEXTURE_RENDERING) {
 		Resources::QuitResources();
@@ -132,6 +132,7 @@ int Window::Destroy() {
 
 EventType Window::PollEvent() {
 	SDL_WaitEvent(&this->evt);
+	lock_guard<recursive_mutex> lock(this->event_mtx);
 	switch (this->evt.type) {
 	case SDL_QUIT:
 		return QUIT;
@@ -140,6 +141,25 @@ EventType Window::PollEvent() {
 		return KEY_DOWN;
 	case SDL_KEYUP:
 		this->scene_list[0]->PushEvent(KEY_UP, this->evt.key.keysym.sym);
+		if (this->evt.key.keysym.sym == SDLK_ESCAPE) {
+			this->run = false;
+		}
+		else if (this->evt.key.keysym.sym == SDLK_F11) {
+			if (!this->is_full_screen) {
+				//SDL_SetWindowFullscreen(this->win, 0);
+				this->is_full_screen = true;
+			}
+			else {
+				//SDL_SetWindowFullscreen(this->win, SDL_WINDOW_FULLSCREEN_DESKTOP);
+				this->is_full_screen = false;
+			}
+		}
+		else if (this->evt.key.keysym.sym == SDLK_F12) {
+			double fps = this->frame_cnt / ((this->RunTime() - this->frame_time) / 1000.0);
+			Log::System("Current FPS: ", fps);
+			this->frame_cnt = 0;
+			this->frame_time = this->RunTime();
+		}
 		return KEY_UP;
 	case SDL_MOUSEBUTTONDOWN:
 		this->evt.motion.y *= -1;

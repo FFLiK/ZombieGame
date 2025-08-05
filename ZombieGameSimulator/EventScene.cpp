@@ -272,6 +272,10 @@ int EventScene::ProcessInit() {
 		Slide(450, nullptr, Slide::DISAPPEAR),
 	};
 	
+	for (int i = 0; i < this->slides.size(); ++i) {
+		this->slides[i].level *= Global::WIN::FRAME_RATE_MULTIPLIER;
+	}
+	this->execute_event_level *= Global::WIN::FRAME_RATE_MULTIPLIER;
 	return 0;
 }
 

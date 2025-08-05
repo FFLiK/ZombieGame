@@ -16,7 +16,7 @@ private:
 	PlayerState state = PLAYER_HUMAN;
 	PlayerState reserved_state = PLAYER_HUMAN;
 
-	inline static const double PLAYER_MOVING_FRAME_NUM = 15;
+	inline static const double PLAYER_MOVING_FRAME_NUM = 15 * Global::WIN::FRAME_RATE_MULTIPLIER;
 	int moving_frame = 0;
 
 	std::vector<Hexagon*> path;
