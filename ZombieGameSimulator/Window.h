@@ -22,6 +22,8 @@ private:
 
 	std::recursive_mutex  mtx;
 
+	bool is_full_screen = false;
+
 public:
 	class WindowData {
 	public:

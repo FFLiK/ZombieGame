@@ -14,6 +14,14 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
+	Log::System("Zombie Game Simulator");
+	Log::System("[INFO]");
+	Log::System("Project:", Global::SYSTEM::NAME, "(", Global::SYSTEM::DEV_NAME, ")");
+	Log::System("Version:", Global::SYSTEM::VERSION);
+	Log::System("Release:", Global::SYSTEM::IS_RELEASE ? "True" : "False");
+	Log::System("Debug Mode:", Global::SYSTEM::DEBUG_MODE ? "True" : "False");
+	Log::System("Texture Rendering:", Global::SYSTEM::TEXTURE_RENDERING ? "True" : "False");
+
 	srand((unsigned)time(nullptr));
 
 	SDL_Init(SDL_INIT_EVERYTHING);

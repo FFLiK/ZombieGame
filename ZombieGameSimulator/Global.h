@@ -13,6 +13,8 @@ namespace Global {
 		static const int FPS = 60;
 
 		static constexpr double SIZE_MULTIPLIER = SCREEN_WIDTH / 1280.0;
+
+		static std::atomic<bool> FULL_SCREEN;
 	};
 
 	class GAME {
@@ -40,9 +42,10 @@ namespace Global {
 		static const bool IS_RELEASE = false;
 		static constexpr const char* DEVELOPER = "FFLiK";
 
+		static const bool USE_APPDATA = true;
 		static constexpr const char* RESOURCE_PATH = "res\\";
-		static constexpr const char* IMAGE_EXTENSION = ".png";
-		static constexpr const char* FONT_EXTENSION = ".ttf";
+		static constexpr const char* IMAGE_EXTENSION = ".asset"; // .png or .asset
+		static constexpr const char* FONT_EXTENSION = ".type"; // .ttf or .type
 
 		static const bool DEBUG_MODE = false;
 		static const bool TEXTURE_RENDERING = false;

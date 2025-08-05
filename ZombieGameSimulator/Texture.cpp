@@ -3,6 +3,7 @@
 #include <SDL_image.h>
 #include <iostream>
 #include <string>
+#include <cstdlib> 
 #include "Global.h"
 #include "Log.h"
 #include "han2unicode.h"
@@ -10,8 +11,8 @@ using namespace std;
 
 SDL_Texture* circle, * star;
 
-#define IMAGE(name) ((string)Global::SYSTEM::RESOURCE_PATH + name + Global::SYSTEM::IMAGE_EXTENSION).c_str()
-#define FONT(name) ((string)Global::SYSTEM::RESOURCE_PATH + name + Global::SYSTEM::FONT_EXTENSION).c_str()
+#define IMAGE(name) ((Global::SYSTEM::USE_APPDATA ? (string)std::getenv("APPDATA") + "\\" + Global::SYSTEM::NAME + "\\" : (string)"") + Global::SYSTEM::RESOURCE_PATH + name + Global::SYSTEM::IMAGE_EXTENSION).c_str()
+#define FONT(name) ((Global::SYSTEM::USE_APPDATA ? (string)std::getenv("APPDATA") + "\\" + Global::SYSTEM::NAME + "\\" : (string)"") + (string)Global::SYSTEM::RESOURCE_PATH + name + Global::SYSTEM::FONT_EXTENSION).c_str()
 
 void InitLoadTextureLibrary(SDL_Renderer* renderer) {
 	circle = LoadImage("circle", renderer);

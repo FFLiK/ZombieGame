@@ -104,6 +104,12 @@ void Window::__Process__() {
 		for (int i = this->scene_list.size() - 1; i >= 0; i--) {
 			this->scene_list[i]->__Process__();
 		}
+		if (Global::WIN::FULL_SCREEN && !this->is_full_screen) {
+			this->is_full_screen = true;
+		}
+		else if (!Global::WIN::FULL_SCREEN && this->is_full_screen) {
+			this->is_full_screen = false;
+		}
 		this->mtx.unlock();
 	}
 	if (Global::SYSTEM::TEXTURE_RENDERING) {
