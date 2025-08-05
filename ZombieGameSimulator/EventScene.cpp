@@ -214,47 +214,47 @@ int EventScene::ProcessInit() {
 	switch (this->game_event) {
 	case GameEvent::INSTANT_EXTRA_MOVE:
 		event_main_text = "You can move one more time.";
-		this->execute_event_level = 450 + transition_level_delta;
+		this->execute_event_level = 450 * Global::WIN::FRAME_RATE_MULTIPLIER + transition_level_delta;
 		break;
 
 	case GameEvent::SWAP_POSITION_WITH_TEAM:
 		event_main_text = "Swap positions with a chosen team.";
-		this->execute_event_level = 450 + transition_level_delta;
+		this->execute_event_level = 450 * Global::WIN::FRAME_RATE_MULTIPLIER + transition_level_delta;
 		break;
 
 	case GameEvent::MOVE_SUPER_ZOMBIE_TO_TILE:
 		event_main_text = "Move the super zombie to any chosen tile.";
-		this->execute_event_level = 450;
+		this->execute_event_level = 450 * Global::WIN::FRAME_RATE_MULTIPLIER;
 		break;
 
 	case GameEvent::MOVE_SUPER_ZOMBIE_NEARBY:
 		event_main_text = "Move the super zombie to an adjacent tile.";
-		this->execute_event_level = 450;
+		this->execute_event_level = 450 * Global::WIN::FRAME_RATE_MULTIPLIER;
 		break;
 
 	case GameEvent::CHANGE_TEAM_STATE:
 		event_main_text = "Change the state of a chosen team.";
-		this->execute_event_level = 450;
+		this->execute_event_level = 450 * Global::WIN::FRAME_RATE_MULTIPLIER;
 		break;
 
 	case GameEvent::CHANGE_OWN_STATE:
 		event_main_text = "Change the state of your own team.";
-		this->execute_event_level = 450;
+		this->execute_event_level = 450 * Global::WIN::FRAME_RATE_MULTIPLIER;
 		break;
 
 	case GameEvent::REVERSE_ALL_STATES:
 		event_main_text = "Reverse the state of all teams.";
-		this->execute_event_level = 450;
+		this->execute_event_level = 450 * Global::WIN::FRAME_RATE_MULTIPLIER;
 		break;
 
 	case GameEvent::CREATE_OBSTACLE:
 		event_main_text = "Create an obstacle.";
-		this->execute_event_level = 450;
+		this->execute_event_level = 450 * Global::WIN::FRAME_RATE_MULTIPLIER;
 		break;
 
 	case GameEvent::SCORE_ROULETTE_EVENT:
 		event_main_text = "Score event.";
-		this->execute_event_level = 450;
+		this->execute_event_level = 450 * Global::WIN::FRAME_RATE_MULTIPLIER;
 		break;
 	}
 
@@ -279,7 +279,6 @@ int EventScene::ProcessInit() {
 	for (int i = 0; i < this->slides.size(); ++i) {
 		this->slides[i].level *= Global::WIN::FRAME_RATE_MULTIPLIER;
 	}
-	this->execute_event_level *= Global::WIN::FRAME_RATE_MULTIPLIER;
 	return 0;
 }
 
