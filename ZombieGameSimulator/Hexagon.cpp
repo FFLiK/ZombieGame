@@ -11,6 +11,12 @@ Hexagon::Hexagon(double x, double y) {
 
 	GetCenterPointFromHexagonCoordinate(x, y, center_x, center_y);
 	GetPointsFromHexagonCoordinate(x, y, Global::GAME::HEXAGON_SIZE, points);
+
+	this->turn_cnt = 0;
+	this->visited = 0;
+
+	this->prev_type = UNDEFINED;
+	this->type = HEXAGON_NORMAL;
 }
 double Hexagon::GetX() const { return x; }
 double Hexagon::GetY() const { return y; }
@@ -85,6 +91,9 @@ void Hexagon::DrawHexagon(SDL_Renderer* ren) const {
 }
 
 void Hexagon::SetProperty(HexagonType type) {
+	if (type == HEXAGON_OBSTACLE) {
+		this->prev_type = this->type;
+	}
 	this->type = type;
 }
 
@@ -127,4 +136,17 @@ bool Hexagon::IsInside(double x, double y) const {
 			inside = !inside;
 	}
 	return inside;
+}
+
+void Hexagon::UpdateTurnCount() {
+	if (this->prev_type != UNDEFINED) {
+		this->turn_cnt++;
+		if (this->turn_cnt == 4) {
+			this->type = this->prev_type;
+			this->prev_type = UNDEFINED;
+		}
+	}
+	else {
+		this->turn_cnt = 0;
+	}
 }

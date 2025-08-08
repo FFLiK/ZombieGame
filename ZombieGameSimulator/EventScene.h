@@ -19,7 +19,7 @@ public:
 };
 
 enum class GameEvent {
-	INSTANT_EXTRA_MOVE,           // Instantly move one more time
+	INSTANT_EXTRA_MOVE,           // Instantly move one more time : safe
 	SWAP_POSITION_WITH_TEAM,      // Instantly swap positions with a chosen team
 	MOVE_SUPER_ZOMBIE_TO_TILE,    // Move the super zombie to any chosen tile
 	MOVE_SUPER_ZOMBIE_NEARBY,     // Move the super zombie to an adjacent tile

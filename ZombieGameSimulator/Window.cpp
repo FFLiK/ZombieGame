@@ -4,6 +4,8 @@
 #include <Log.h>
 #include <Texture.h>
 #include <Resources.h>
+#include <Global.h>
+#include <Input.h>
 
 Window::Window(WindowData w_dat) {
 	Log::FormattedDebug("Window", "Constructor", "Calling constructor of Window with title: " + w_dat.title + ", width: " + std::to_string(w_dat.width) + ", height: " + std::to_string(w_dat.height) + ", fps: " + std::to_string(w_dat.fps));
@@ -15,10 +17,12 @@ Window::Window(WindowData w_dat) {
 	this->win = SDL_CreateWindow(w_dat.title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w_dat.width, w_dat.height, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
 	this->ren = nullptr;
 	this->fps = w_dat.fps;
-	this->windows_created_time = clock();
+	this->windows_created_time = std::chrono::steady_clock::now();
 
 	this->frame_cnt = 0;
-	this->frame_time = this->windows_created_time;
+	this->frame_time = this->RunTime();
+
+	this->is_executing = false;
 }
 
 Window::~Window() {
@@ -49,7 +53,14 @@ int Window::SetWindow(WindowData w_dat) {
 int Window::Execute() {
 	thread th([&]() {this->__Process__();});
 	th.detach();
+	WaitForExecuting();
 	return 0;
+}
+
+void Window::WaitForExecuting() {
+	while (!this->is_executing) {
+		this_thread::sleep_for(chrono::milliseconds(10));
+	}
 }
 
 int Window::AddScene(Scene* scene, int pos) {
@@ -85,20 +96,20 @@ int Window::DeleteScene(Scene* scene) {
 }
 
 void Window::__Process__() {
-	this->scene_mtx.lock();
 	this->ren = SDL_CreateRenderer(this->win, -1, SDL_RENDERER_ACCELERATED);
 	if (Global::SYSTEM::TEXTURE_RENDERING) {
 		InitLoadTextureLibrary(this->ren);
 		Resources::InitResources(this->ren);
 	}
-	this->scene_mtx.unlock();
+	this->is_executing = true;
 	
-	int prev = this->RunTime() * 1000;
+	double prev = this->RunTime();
 	while (this->run) {
 		this->scene_mtx.lock();
-		int delta = (this->RunTime() * 1000 - prev);
-		if (delta > 1000000 / this->fps) {
-			prev += 1000000 / this->fps;
+		double delta = (this->RunTime() - prev) - Input::GetInputDuration();
+		//Log::Debug(delta);
+		if (delta > 1 / (double)this->fps) {
+			prev += 1 / (double)this->fps;
 			SDL_RenderClear(this->ren);
 			for (int i = this->scene_list.size() - 1; i >= 0; i--) {
 				this->scene_list[i]->Rendering();
@@ -158,7 +169,7 @@ EventType Window::PollEvent() {
 			}
 		}
 		else if (this->evt.key.keysym.sym == SDLK_F12) {
-			double fps = this->frame_cnt / ((this->RunTime() - this->frame_time) / 1000.0);
+			double fps = this->frame_cnt / (this->RunTime() - this->frame_time);
 			Log::System("Current FPS: ", fps);
 			this->frame_cnt = 0;
 			this->frame_time = this->RunTime();
@@ -201,6 +212,8 @@ EventType Window::PollEvent() {
 	}
 }
 
-int Window::RunTime() {
-	return clock() - this->windows_created_time;
+double Window::RunTime() {
+	auto now = std::chrono::steady_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - this->windows_created_time);
+	return static_cast<double>(duration.count()) / 1000.0;
 }

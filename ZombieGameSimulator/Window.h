@@ -4,6 +4,7 @@
 #include <Scene.h>
 #include <vector>
 #include <mutex>
+#include <chrono>
 using namespace std;
 
 class Window {
@@ -16,7 +17,7 @@ private:
 	atomic<bool> rendering_completed;
 	int fps;
 
-	int windows_created_time;
+	std::chrono::time_point<std::chrono::steady_clock> windows_created_time;
 
 	vector<Scene*> scene_list;
 
@@ -26,7 +27,9 @@ private:
 	bool is_full_screen = false;
 
 	int frame_cnt;
-	int frame_time = 0;
+	double frame_time = 0;
+
+	atomic<bool> is_executing = false;
 
 public:
 	class WindowData {
@@ -42,6 +45,7 @@ public:
 	int SetWindow(WindowData w_dat);
 	
 	int Execute();
+	void WaitForExecuting();
 	int AddScene(Scene *scene, int pos); //0 = Front, -1 = Back, n = nth index
 	int DeleteScene(Scene *scene);
 	void __Process__();
@@ -50,6 +54,6 @@ public:
 	
 	EventType PollEvent();
 
-	int RunTime();
+	double RunTime();
 };
 

@@ -313,34 +313,33 @@ void Game::Move(double x, double y) {
 			}
 		}
 		if (player->GetState() == PLAYER_HUMAN && hexagon->GetProperty() == HEXAGON_TELEPORT) {
-			// Teleport to the other teleport hexagon (It have to be modified later)
-			bool tp1 = GetPlayer(-4, 0) == nullptr && !(x == -4 && y == 0);
-			bool tp2 = GetPlayer(2, 2) == nullptr && !(x == 2 && y == 2);
-			bool tp3 = GetPlayer(2, -2) == nullptr && !(x == 2 && y == -2);
-
-			int num = tp1 + tp2 + tp3;
+			int num = 0;
+			for (int i = 0; i < this->hexagons.size(); i++) {
+				if (this->hexagons[i].GetProperty() == HEXAGON_TELEPORT) {
+					if (GetPlayer(this->hexagons[i].GetX(), this->hexagons[i].GetY()) == nullptr) {
+						num++;
+					}
+				}
+			}
 			switch (num) {
 			case 0:
 				Log::System("No teleport hexagon available. Cannot teleport.");
 				break;
 			case 1:
-				if (tp1) {
-					path.insert(path.begin(), GetHexagon(-4, 0));
-					player->SetPosition(-4, 0, &path);
-					Log::System("Player teleported to hexagon (-4, 0).");
-				}
-				else if (tp2) {
-					path.insert(path.begin(), GetHexagon(2, 2));
-					player->SetPosition(2, 2, &path);
-					Log::System("Player teleported to hexagon (2, 2).");
-				}
-				else if (tp3) {
-					path.insert(path.begin(), GetHexagon(2, -2));
-					player->SetPosition(2, -2, &path);
-					Log::System("Player teleported to hexagon (2, -2).");
-				}
+				Log::System("No teleport hexagon available. Cannot teleport.");
 				break;
 			case 2:
+				for (int i = 0; i < this->hexagons.size(); i++) {
+					if (this->hexagons[i].GetProperty() == HEXAGON_TELEPORT
+						&& (this->hexagons[i].GetX() != x || this->hexagons[i].GetY() != y)
+						&& GetPlayer(this->hexagons[i].GetX(), this->hexagons[i].GetY()) == nullptr) {
+						path.insert(path.begin(), &this->hexagons[i]);
+						player->SetPosition(this->hexagons[i].GetX(), this->hexagons[i].GetY(), &path);
+						Log::System("Player teleported to hexagon (" + std::to_string(this->hexagons[i].GetX()) + ", " + std::to_string(this->hexagons[i].GetY()) + ").");
+					}
+				}
+				break;
+			default:
 				teleporting_player = player;
 				Log::System("Select a teleport hexagon to teleport.");
 				break;
@@ -392,6 +391,10 @@ void Game::UpdateTurn() {
 	if (this->teleporting_player == nullptr && this->event_triggered_player == nullptr) {
 		current_turn = (current_turn + 1) % players.size();
 
+		for (int i = 0; i < this->hexagons.size(); i++) {
+			this->hexagons[i].UpdateTurnCount();
+		}
+
 		timer = clock();
 		pause_timer = 0;
 
@@ -420,7 +423,7 @@ void Game::ExecuteEvent() {
 			if (this->hexagons[i].GetProperty() == HEXAGON_EVENT) {
 				this->hexagons[i].SetProperty(HEXAGON_NORMAL);
 			}
-			if (this->hexagons[i].GetProperty() == HEXAGON_NORMAL
+			else if (this->hexagons[i].GetProperty() == HEXAGON_NORMAL
 				&& this->GetPlayer(this->hexagons[i].GetX(), this->hexagons[i].GetY()) == nullptr) {
 				hexagon_num++;
 			}

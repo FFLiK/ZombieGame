@@ -22,7 +22,7 @@ namespace Global {
 		static constexpr double PLAYER_SIZE = 20;
 		static constexpr double SUPER_ZOMBIE_SIZE = 25;
 
-		static constexpr int TIME_LIMIT = 30;
+		static constexpr int TIME_LIMIT = 60;
 
 		static constexpr int PLAYER_FONT_SIZE = 24;
 		static constexpr int SCORE_FONT_SIZE = 24;
@@ -37,7 +37,7 @@ namespace Global {
 	public:
 		static constexpr const char* NAME = "The Last Human";
 		static constexpr const char* DEV_NAME = "Zombie Game";
-		static constexpr const char* VERSION = "1.2.0";
+		static constexpr const char* VERSION = "1.3.0";
 		static const bool IS_RELEASE = false;
 		static constexpr const char* DEVELOPER = "FFLiK";
 

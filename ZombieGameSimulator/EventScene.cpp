@@ -15,6 +15,7 @@ EventScene::EventScene(Game* game) {
 
 	std::uniform_int_distribution<int> dist(0, 8);
 	this->game_event = static_cast<GameEvent>(dist(rng));
+	this->game_event = GameEvent::CREATE_OBSTACLE;
 
 	this->background_alpha = 0;
 	this->current_text = nullptr;
@@ -104,17 +105,31 @@ int EventScene::Rendering() {
 		} break;
 		case GameEvent::SWAP_POSITION_WITH_TEAM: {
 			int target = Input::GetInputInt("Choose a team to swap with (1 - " + std::to_string(this->game->GetPlayers()->size() - 1) + "): ", 1, this->game->GetPlayers()->size() - 1);
+			target--;
 			double x1 = this->game->players[this->game->current_turn].GetX();
 			double y1 = this->game->players[this->game->current_turn].GetY();
-			double x2 = this->game->players[target - 1].GetX();
-			double y2 = this->game->players[target - 1].GetY();
+			double x2 = this->game->players[target].GetX();
+			double y2 = this->game->players[target].GetY();
 			vector<Hexagon*> path1, path2;
 			path1.push_back(game->GetHexagon(x2, y2));
 			path1.push_back(game->GetHexagon(x1, y1));
 			path2.push_back(game->GetHexagon(x1, y1));
 			path2.push_back(game->GetHexagon(x2, y2));
 			this->game->players[this->game->current_turn].SetPosition(x2, y2, &path1);
-			this->game->players[target - 1].SetPosition(x1, y1, &path2);
+			this->game->players[target].SetPosition(x1, y1, &path2);
+
+			if (this->game->GetHexagon(x2, y2)->GetProperty() == HEXAGON_PAPAL) {
+				this->game->players[this->game->current_turn].SetState(PLAYER_HUMAN);
+			}
+
+			for (int i = 0; i < this->game->GetPlayers()->size(); ++i) {
+				if (i != target && i != this->game->current_turn) {
+					if (x2 == this->game->players[i].GetX() && y2 == this->game->players[i].GetY()) {
+						this->game->players[this->game->current_turn].SetState(PLAYER_ZOMBIE);
+					}
+				}
+			}
+			
 		} break;
 		case GameEvent::MOVE_SUPER_ZOMBIE_TO_TILE: {
 			if (target_hexagon == nullptr) {
@@ -158,18 +173,56 @@ int EventScene::Rendering() {
 			}
 		} break;
 		case GameEvent::CHANGE_TEAM_STATE: {
-			int target = Input::GetInputInt("Choose a team to change state (1 - " + std::to_string(this->game->GetPlayers()->size() - 1) + "): ", 1, this->game->GetPlayers()->size() - 1);
-			PlayerState new_state = (this->game->players[target - 1].GetState() == PLAYER_HUMAN) ? PLAYER_ZOMBIE : PLAYER_HUMAN;
-			this->game->players[target - 1].SetState(new_state);
+			bool pass = false;
+			int target;
+			while (!pass) {
+				target = Input::GetInputInt("Choose a team to change state (1 - " + std::to_string(this->game->GetPlayers()->size() - 1) + "): ", 1, this->game->GetPlayers()->size() - 1);
+				pass = true;
+				target--;
+				if (this->game->GetHexagon(this->game->players[target].GetX(), this->game->players[target].GetY())->GetProperty() == HEXAGON_PAPAL) {
+					Log::System("EventScene", "Rendering", "Cannot change state of papal team " + std::to_string(target + 1));
+					pass = false;
+				}
+				for (int i = 0; i < this->game->GetPlayers()->size(); ++i) {
+					if (i != target 
+						&& this->game->players[target].GetX() == this->game->players[i].GetX()
+						&& this->game->players[target].GetY() == this->game->players[i].GetY()) {
+						if (this->game->players[i].GetState() == PLAYER_ZOMBIE) {
+							Log::System("EventScene", "Rendering", "Cannot change state of team " + std::to_string(target + 1) + " because it is on the same tile as zombie team " + std::to_string(i + 1));
+						}
+						else {
+							Log::System("EventScene", "Rendering", "Cannot change state of team " + std::to_string(target + 1) + " because it is on the same tile as super zombie");
+						}
+						pass = false;
+					}
+				}
+			}
+			PlayerState new_state = (this->game->players[target].GetState() == PLAYER_HUMAN) ? PLAYER_ZOMBIE : PLAYER_HUMAN;
+			this->game->players[target].SetState(new_state);
+			Log::System("EventScene", "Rendering", "State of team " + std::to_string(target + 1) + " changed to " + ((new_state == PLAYER_HUMAN) ? "HUMAN" : "ZOMBIE"));
 		} break;
 		case GameEvent::CHANGE_OWN_STATE: {
 			PlayerState new_state = (this->game->GetCurrentPlayer()->GetState() == PLAYER_HUMAN) ? PLAYER_ZOMBIE : PLAYER_HUMAN;
 			this->game->GetCurrentPlayer()->SetState(new_state);
+			Log::System("EventScene", "Rendering", "State of your team changed to " + (new_state == PLAYER_HUMAN) ? "HUMAN" : "ZOMBIE");
 		} break;
 		case GameEvent::REVERSE_ALL_STATES: {
 			for (int i = 0; i < this->game->GetPlayers()->size() - 1; ++i) {
+				if (this->game->GetHexagon(this->game->GetPlayers()->at(i).GetX(), this->game->GetPlayers()->at(i).GetY())->GetProperty() == HEXAGON_PAPAL) {
+					continue;
+				}
+				bool pass = false;
+				for (int j = 0; j < this->game->GetPlayers()->size(); ++j) {
+					if (i != j
+						&& this->game->players[i].GetX() == this->game->players[j].GetX()
+						&& this->game->players[i].GetY() == this->game->players[j].GetY()) {
+						pass = true;
+					}
+				}
+				if (pass) continue;
 				PlayerState new_state = (this->game->GetPlayers()->at(i).GetState() == PLAYER_HUMAN) ? PLAYER_ZOMBIE : PLAYER_HUMAN;
 				this->game->GetPlayers()->at(i).SetState(new_state);
+				Log::System("EventScene", "Rendering", "State of team " + std::to_string(i + 1) + " changed to " + ((new_state == PLAYER_HUMAN) ? "HUMAN" : "ZOMBIE"));
 			}
 		} break;
 		case GameEvent::CREATE_OBSTACLE: {

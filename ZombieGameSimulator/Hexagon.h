@@ -9,7 +9,8 @@ enum HexagonType {
 	HEXAGON_PAPAL,
 	HEXAGON_TELEPORT,
 	HEXAGON_EVENT,
-	HEXAGON_OBSTACLE
+	HEXAGON_OBSTACLE,
+	UNDEFINED
 };
 
 class Hexagon {
@@ -23,6 +24,9 @@ private:
 	std::vector<SDL_Point> points;
 
 	HexagonType type = HEXAGON_NORMAL;
+	HexagonType prev_type = UNDEFINED;
+
+	int turn_cnt;
 
 	bool activated = false;
 
@@ -46,5 +50,7 @@ public:
 	bool IsInside(double x, double y) const;
 	
 	bool visited = false;
+
+	void UpdateTurnCount();
 };
 

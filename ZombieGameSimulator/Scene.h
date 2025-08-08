@@ -2,7 +2,6 @@
 #include <SDL.h>
 #include <Event.h>
 #include <queue>
-#include <atomic>
 using namespace std;
 
 class Scene {

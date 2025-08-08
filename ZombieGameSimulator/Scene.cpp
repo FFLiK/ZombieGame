@@ -1,5 +1,4 @@
 #include "Scene.h"
-#include <thread>
 #include <iostream>
 #include <Log.h>
 using namespace std;
