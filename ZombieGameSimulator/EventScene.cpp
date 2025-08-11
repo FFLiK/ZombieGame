@@ -15,7 +15,6 @@ EventScene::EventScene(Game* game) {
 
 	std::uniform_int_distribution<int> dist(0, 8);
 	this->game_event = static_cast<GameEvent>(dist(rng));
-	this->game_event = GameEvent::CREATE_OBSTACLE;
 
 	this->background_alpha = 0;
 	this->current_text = nullptr;

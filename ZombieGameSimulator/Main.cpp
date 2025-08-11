@@ -20,7 +20,6 @@ int main(int argc, char *argv[]) {
 	Log::System("Version:", Global::SYSTEM::VERSION);
 	Log::System("Release:", Global::SYSTEM::IS_RELEASE ? "True" : "False");
 	Log::System("Debug Mode:", Global::SYSTEM::DEBUG_MODE ? "True" : "False");
-	Log::System("Texture Rendering:", Global::SYSTEM::TEXTURE_RENDERING ? "True" : "False");
 
 	SDL_Init(SDL_INIT_EVERYTHING);
 	TTF_Init();

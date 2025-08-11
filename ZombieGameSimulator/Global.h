@@ -19,12 +19,14 @@ namespace Global {
 	class GAME {
 	public:
 		static constexpr double HEXAGON_SIZE = 35;
-		static constexpr double PLAYER_SIZE = 20;
-		static constexpr double SUPER_ZOMBIE_SIZE = 25;
+		static constexpr double PLAYER_SIZE = 25;
+		static constexpr double SUPER_ZOMBIE_SIZE = 30;
+
+		static constexpr double TEXTURE_SIZE_MULTIPLIER = 1.355;
 
 		static constexpr int TIME_LIMIT = 60;
 
-		static constexpr int PLAYER_FONT_SIZE = 24;
+		static constexpr int PLAYER_FONT_SIZE = 32;
 		static constexpr int SCORE_FONT_SIZE = 24;
 		static constexpr int TIMER_FONT_SIZE = 96;
 
@@ -35,11 +37,11 @@ namespace Global {
 
 	class SYSTEM {
 	public:
-		static constexpr const char* NAME = "The Last Human";
+		static constexpr const char* NAME = "The Final Human";
 		static constexpr const char* DEV_NAME = "Zombie Game";
-		static constexpr const char* VERSION = "1.3.0";
-		static const bool IS_RELEASE = false;
-		static constexpr const char* DEVELOPER = "FFLiK";
+		static constexpr const char* VERSION = "2.0.0";
+		static const bool IS_RELEASE = true;
+		static constexpr const char* DEVELOPER = "FSC";
 
 		static const bool USE_APPDATA = true;
 		static constexpr const char* RESOURCE_PATH = "res\\";
@@ -47,7 +49,7 @@ namespace Global {
 		static constexpr const char* FONT_EXTENSION = ".type"; // .ttf or .type
 
 		static const bool DEBUG_MODE = false;
-		static const bool TEXTURE_RENDERING = false;
+		static bool TEXTURE_RENDERING;
 
 		static int const TITLE_FONT_SIZE = 60;
 		static int const DEV_FONT_SIZE = 16;

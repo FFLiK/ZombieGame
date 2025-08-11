@@ -32,6 +32,8 @@ void Resources::InitResources(SDL_Renderer* renderer) {
 	for (char i = 0; i < 6; ++i) {
 		string human_name = "player_" + std::string(1, i + 'a');
 		string zombie_name = "zombie_" + std::string(1, i + 'a');
+		human_name = "player";
+		zombie_name = "zombie";
 		player_human[i] = LoadImage(human_name.c_str(), renderer);
 		player_zombie[i] = LoadImage(zombie_name.c_str(), renderer);
 	}

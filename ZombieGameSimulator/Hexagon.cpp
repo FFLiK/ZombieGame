@@ -18,6 +18,11 @@ Hexagon::Hexagon(double x, double y) {
 	this->prev_type = UNDEFINED;
 	this->type = HEXAGON_NORMAL;
 }
+
+Hexagon::~Hexagon() {
+
+}
+
 double Hexagon::GetX() const { return x; }
 double Hexagon::GetY() const { return y; }
 
@@ -32,11 +37,13 @@ void Hexagon::DrawHexagon(SDL_Renderer* ren) const {
 		vy[i] = points[i].y;
 	}
 
+	SDL_Rect src;
+	SDL_QueryTexture(Resources::tile_normal, NULL, NULL, &src.w, &src.h);
 	SDL_Rect dst;
-	dst.w = circumradius * 2;
-	dst.h = circumradius * 2;
-	dst.x = static_cast<int>(center_x - circumradius);
-	dst.y = static_cast<int>(center_y - circumradius);
+	dst.w = circumradius * 2 * src.w / src.h * Global::GAME::TEXTURE_SIZE_MULTIPLIER;
+	dst.h = circumradius * 2 * Global::GAME::TEXTURE_SIZE_MULTIPLIER;
+	dst.x = static_cast<int>(center_x - dst.w / 2);
+	dst.y = static_cast<int>(center_y - dst.h / 2);
 
 	switch (type) {
 	case HEXAGON_NORMAL:

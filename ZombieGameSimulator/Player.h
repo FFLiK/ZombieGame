@@ -28,6 +28,7 @@ private:
 public:
 	Player(PlayerState state, double x, double y, int index);
 	~Player();
+	Player(const Player& other);
 
 	double GetX() const;
 	double GetY() const;

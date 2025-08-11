@@ -98,15 +98,16 @@ int GameScene::Rendering() {
 		if (game->IsEventTriggered()) {
 			game->ExecuteEvent();
 		}
-		for (int i = 0; i < game->GetPlayers()->size() - 1; i++) {
-			if (game->GetScore(i) != this->score_copy[i]) {
-				this->score_copy[i] = game->GetScore(i);
-				std::string score_text = "Team " + std::to_string(i + 1) + " : " + std::to_string(game->GetScore(i));
-				SDL_DestroyTexture(this->score_text_tex[i]);
-				this->score_text_tex[i] = LoadText(score_text.c_str(), this->ren, Global::GAME::SCORE_FONT_SIZE, "font", 255, 255, 255);
-			}
-		}
 		game->UpdateTurn();
+	}
+
+	for (int i = 0; i < game->GetPlayers()->size() - 1; i++) {
+		if (game->GetScore(i) != this->score_copy[i]) {
+			this->score_copy[i] = game->GetScore(i);
+			std::string score_text = "Team " + std::to_string(i + 1) + " : " + std::to_string(game->GetScore(i));
+			SDL_DestroyTexture(this->score_text_tex[i]);
+			this->score_text_tex[i] = LoadText(score_text.c_str(), this->ren, Global::GAME::SCORE_FONT_SIZE, "font", 255, 255, 255);
+		}
 	}
 	
 	return 0;
@@ -165,6 +166,18 @@ int GameScene::EventProcess(Event& evt) {
 		if (evt.mouse == MOUSE_RIGHT && evt.T == MOUSE_UP) {
 			Log::System("Forced turn change by the right click.");
 			game->UpdateTurn();
+		}
+
+		if (evt.T == KEY_UP) {
+			if (evt.key == SDLK_z) {
+				this->game->Undo();
+			}
+			else if (evt.key == SDLK_y) {
+				this->game->Redo();
+			}
+			else if (evt.key == SDLK_SPACE) {
+				this->game->PauseAndResume();
+			}
 		}
 	}
 	return 0;

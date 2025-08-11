@@ -5,6 +5,7 @@
 #include <Window.h>
 #include <Scene.h>
 #include <random>
+#include <stack>
 
 class Game {
 private:
@@ -13,6 +14,15 @@ private:
 
 	int current_turn = -1;
 
+	std::vector<int> score;
+
+	std::stack<vector<Hexagon>> hexagon_history;
+	std::stack<vector<Player>> player_history;
+	std::stack<vector<int>> score_history;
+	std::stack<vector<Hexagon>> hexagon_after_history;
+	std::stack<vector<Player>> player_after_history;
+	std::stack<vector<int>> score_after_history;
+
 	bool Check(double cur_x, double cur_y, double target_x, double target_y, int step, bool first_move, Hexagon* hexagon, Player* player, std::vector<Hexagon*>* path);
 
 	Player* teleporting_player;
@@ -20,10 +30,9 @@ private:
 
 	int timer;
 	int pause_timer = 0;
+	int pause_timer_i_dont_want_to_use_it_but_HWI_said_it_is_necessary_bull_shit = 0;
 	
 	int* zombie_infection_score = nullptr;
-
-	std::vector<int> score;
 
 	bool have_to_update = false;
 
@@ -64,6 +73,10 @@ public:
 
 	bool IsStarted() const;
 
+	void Undo();
+	void Redo();
+
+	void PauseAndResume();
+
 	friend class EventScene;
 };
-

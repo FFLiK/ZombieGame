@@ -97,10 +97,8 @@ int Window::DeleteScene(Scene* scene) {
 
 void Window::__Process__() {
 	this->ren = SDL_CreateRenderer(this->win, -1, SDL_RENDERER_ACCELERATED);
-	if (Global::SYSTEM::TEXTURE_RENDERING) {
-		InitLoadTextureLibrary(this->ren);
-		Resources::InitResources(this->ren);
-	}
+	InitLoadTextureLibrary(this->ren);
+	Resources::InitResources(this->ren);
 	this->is_executing = true;
 	
 	double prev = this->RunTime();
@@ -125,10 +123,8 @@ void Window::__Process__() {
 		this->event_mtx.unlock();
 		this->scene_mtx.unlock();
 	}
-	if (Global::SYSTEM::TEXTURE_RENDERING) {
-		Resources::QuitResources();
-		QuitLoadTextureLibrary();
-	}
+	Resources::QuitResources();
+	QuitLoadTextureLibrary();
 	this->rendering_completed = true;
 }
 
@@ -173,6 +169,9 @@ EventType Window::PollEvent() {
 			Log::System("Current FPS: ", fps);
 			this->frame_cnt = 0;
 			this->frame_time = this->RunTime();
+		}
+		else if (this->evt.key.keysym.sym == SDLK_t) {
+			Global::SYSTEM::TEXTURE_RENDERING = !Global::SYSTEM::TEXTURE_RENDERING;
 		}
 		return KEY_UP;
 	case SDL_MOUSEBUTTONDOWN:

@@ -23,6 +23,19 @@ Player::~Player() {
 	}
 }
 
+Player::Player(const Player& other) {
+	this->x = other.x;
+	this->y = other.y;
+	this->center_x = other.center_x;
+	this->center_y = other.center_y;
+	this->state = other.state;
+	this->reserved_state = other.reserved_state;
+	this->moving_frame = other.moving_frame;
+	this->path = other.path;
+	this->index = other.index;
+	this->index_tex = nullptr;
+}
+
 double Player::GetX() const {
 	return this->x;
 }
@@ -54,6 +67,13 @@ void Player::DrawPlayer(SDL_Renderer* ren, bool activated, bool draw_left, bool 
 			SDL_QueryTexture(Resources::player_human[this->index], NULL, NULL, &src.w, &src.h);
 			src.x = 0;
 			src.y = 0;
+			dst.h = points[1].y - points[4].y;
+			dst.w = dst.h * src.w / src.h;
+			dst.h *= Global::GAME::TEXTURE_SIZE_MULTIPLIER;
+			dst.w *= Global::GAME::TEXTURE_SIZE_MULTIPLIER;
+			dst.x = static_cast<int>(this->center_x - dst.w / 2);
+			dst.y = static_cast<int>(this->center_y - dst.h / 2);
+
 			if (!draw_left && draw_right) {
 				src.x = src.w / 2;
 			}
@@ -61,11 +81,6 @@ void Player::DrawPlayer(SDL_Renderer* ren, bool activated, bool draw_left, bool 
 				src.x = 0;
 				src.w = src.w / 2;
 			}
-			
-			dst.w = points[1].y - points[4].y;
-			dst.h = dst.w;
-			dst.x = static_cast<int>(this->center_x - dst.w / 2);
-			dst.y = static_cast<int>(this->center_y - dst.h / 2);
 			if (!draw_left && draw_right) {
 				dst.x += dst.w / 2;
 				dst.w = dst.w / 2;
@@ -81,6 +96,13 @@ void Player::DrawPlayer(SDL_Renderer* ren, bool activated, bool draw_left, bool 
 			SDL_QueryTexture(Resources::player_zombie[this->index], NULL, NULL, &src.w, &src.h);
 			src.x = 0;
 			src.y = 0;
+			dst.h = points[1].y - points[4].y;
+			dst.w = dst.h * src.w / src.h;
+			dst.h *= Global::GAME::TEXTURE_SIZE_MULTIPLIER;
+			dst.w *= Global::GAME::TEXTURE_SIZE_MULTIPLIER;
+			dst.x = static_cast<int>(this->center_x - dst.w / 2);
+			dst.y = static_cast<int>(this->center_y - dst.h / 2);
+
 			if (!draw_left && draw_right) {
 				src.x = src.w / 2;
 			}
@@ -88,11 +110,6 @@ void Player::DrawPlayer(SDL_Renderer* ren, bool activated, bool draw_left, bool 
 				src.x = 0;
 				src.w = src.w / 2;
 			}
-
-			dst.w = points[1].y - points[4].y;
-			dst.h = dst.w;
-			dst.x = static_cast<int>(this->center_x - dst.w / 2);
-			dst.y = static_cast<int>(this->center_y - dst.h / 2);
 			if (!draw_left && draw_right) {
 				dst.x += dst.w / 2;
 				dst.w = dst.w / 2;
@@ -100,18 +117,21 @@ void Player::DrawPlayer(SDL_Renderer* ren, bool activated, bool draw_left, bool 
 			else if (draw_left && !draw_right) {
 				dst.w = dst.w / 2;
 			}
-
 			SDL_RenderCopy(ren, Resources::player_zombie[this->index], &src, &dst);
 			break;
 
 		case PLAYER_SUPER_ZOMBIE:
 			Hexagon::GetPointsFromCenterPoint(this->center_x, this->center_y, Global::GAME::SUPER_ZOMBIE_SIZE, points);
-			
-			dst.w = points[1].y - points[4].y;
-			dst.h = dst.w;
+			SDL_QueryTexture(Resources::player_super_zombie, NULL, NULL, &src.w, &src.h);
+			src.x = 0;
+			src.y = 0;
+			dst.h = points[1].y - points[4].y;
+			dst.w = dst.h * src.w / src.h;
+			dst.h *= Global::GAME::TEXTURE_SIZE_MULTIPLIER;
+			dst.w *= Global::GAME::TEXTURE_SIZE_MULTIPLIER;
 			dst.x = static_cast<int>(this->center_x - dst.w / 2);
 			dst.y = static_cast<int>(this->center_y - dst.h / 2);
-			
+
 			SDL_RenderCopy(ren, Resources::player_super_zombie, NULL, &dst);
 			break;
 		}

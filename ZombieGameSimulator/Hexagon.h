@@ -32,6 +32,7 @@ private:
 
 public:
 	Hexagon(double x, double y);
+	~Hexagon();
 
 	double GetX() const;
 	double GetY() const;

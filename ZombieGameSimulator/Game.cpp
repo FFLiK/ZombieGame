@@ -112,10 +112,13 @@ void Game::Start() {
 	this->timer = clock();
 	this->is_started = true;
 	this->current_turn = 0;
+
+	this->pause_timer_i_dont_want_to_use_it_but_HWI_said_it_is_necessary_bull_shit = -1;
+
 	Log::System("Game started. Current turn: " + std::to_string(current_turn));
 }
 
-bool Game::Check(double cur_x, double cur_y, double tarGet_x, double tarGet_y, int step, bool first_move, Hexagon* hexagon, Player* player, std::vector<Hexagon*>* path) {
+bool Game::Check(double cur_x, double cur_y, double target_x, double target_y, int step, bool first_move, Hexagon* hexagon, Player* player, std::vector<Hexagon*>* path) {
 	auto p = this->GetPlayer(cur_x, cur_y);
 	auto h = this->GetHexagon(cur_x, cur_y);
 
@@ -149,7 +152,7 @@ bool Game::Check(double cur_x, double cur_y, double tarGet_x, double tarGet_y, i
 	h->visited = true;
 	
 	if (step == 0) {
-		if (cur_x == tarGet_x && cur_y == tarGet_y) {
+		if (cur_x == target_x && cur_y == target_y) {
 			if (path) {
 				path->push_back(this->GetHexagon(cur_x, cur_y));
 			}
@@ -158,42 +161,42 @@ bool Game::Check(double cur_x, double cur_y, double tarGet_x, double tarGet_y, i
 		}
 	}
 	else {
-		if (Check(cur_x - 1.0, cur_y, tarGet_x, tarGet_y, step - 1, false, hexagon, player, path)) {
+		if (Check(cur_x - 1.0, cur_y, target_x, target_y, step - 1, false, hexagon, player, path)) {
 			if (path) {
 				path->push_back(this->GetHexagon(cur_x, cur_y));
 			}			
 			h->visited = false;
 			return true;
 		}
-		else if (Check(cur_x + 1.0, cur_y, tarGet_x, tarGet_y, step - 1, false, hexagon, player, path)) {
+		else if (Check(cur_x + 1.0, cur_y, target_x, target_y, step - 1, false, hexagon, player, path)) {
 			if (path) {
 				path->push_back(this->GetHexagon(cur_x, cur_y));
 			}
 			h->visited = false;
 			return true;
 		}
-		else if (Check(cur_x + 0.5, cur_y - 0.5, tarGet_x, tarGet_y, step - 1, false, hexagon, player, path)) {
+		else if (Check(cur_x + 0.5, cur_y - 0.5, target_x, target_y, step - 1, false, hexagon, player, path)) {
 			if (path) {
 				path->push_back(this->GetHexagon(cur_x, cur_y));
 			}			
 			h->visited = false;
 			return true;
 		}
-		else if (Check(cur_x - 0.5, cur_y + 0.5, tarGet_x, tarGet_y, step - 1, false, hexagon, player, path)) {
+		else if (Check(cur_x - 0.5, cur_y + 0.5, target_x, target_y, step - 1, false, hexagon, player, path)) {
 			if (path) {
 				path->push_back(this->GetHexagon(cur_x, cur_y));
 			}			
 			h->visited = false;
 			return true;
 		}
-		else if (Check(cur_x - 0.5, cur_y - 0.5, tarGet_x, tarGet_y, step - 1, false, hexagon, player, path)) {
+		else if (Check(cur_x - 0.5, cur_y - 0.5, target_x, target_y, step - 1, false, hexagon, player, path)) {
 			if (path) {
 				path->push_back(this->GetHexagon(cur_x, cur_y));
 			}			
 			h->visited = false;
 			return true;
 		}
-		else if (Check(cur_x + 0.5, cur_y + 0.5, tarGet_x, tarGet_y, step - 1, false, hexagon, player, path)) {
+		else if (Check(cur_x + 0.5, cur_y + 0.5, target_x, target_y, step - 1, false, hexagon, player, path)) {
 			if (path) {
 				path->push_back(this->GetHexagon(cur_x, cur_y));
 			}			
@@ -229,11 +232,11 @@ bool Game::IsMovable(Hexagon* hexagon, Player* player, std::vector<Hexagon*>* pa
 	double player_x = this->GetCurrentPlayer()->GetX();
 	double player_y = this->GetCurrentPlayer()->GetY();
 
-	double tarGet_x = hexagon->GetX();
-	double tarGet_y = hexagon->GetY();
+	double target_x = hexagon->GetX();
+	double target_y = hexagon->GetY();
 
-	// Constraint : The tarGet hexagon must be different from the current player's hexagon
-	if (player_x == tarGet_x && player_y == tarGet_y) {
+	// Constraint : The target hexagon must be different from the current player's hexagon
+	if (player_x == target_x && player_y == target_y) {
 		return false;
 	}
 
@@ -254,11 +257,19 @@ bool Game::IsMovable(Hexagon* hexagon, Player* player, std::vector<Hexagon*>* pa
 		break;
 	}
 
-	return Check(player_x, player_y, tarGet_x, tarGet_y, step, true, hexagon, player, path);
+	return Check(player_x, player_y, target_x, target_y, step, true, hexagon, player, path);
 }
 
 void Game::Move(double x, double y) {
 	this->have_to_update = true;
+	this->pause_timer_i_dont_want_to_use_it_but_HWI_said_it_is_necessary_bull_shit = -1;
+
+	this->hexagon_history.push(this->hexagons);
+	this->player_history.push(this->players);
+	this->score_history.push(this->score);
+	this->hexagon_after_history = std::stack<std::vector<Hexagon>>();
+	this->player_after_history = std::stack<std::vector<Player>>();
+	this->score_after_history = std::stack<std::vector<int>>();
 
 	Player* player = GetCurrentPlayer();
 	Hexagon* hexagon = GetHexagon(x, y);
@@ -308,7 +319,7 @@ void Game::Move(double x, double y) {
 					Log::System("Player at hexagon (" + std::to_string(x) + ", " + std::to_string(y) + ") infected by super zombie. Score updated to", score[prev_player->GetIndex()], "(" + std::to_string(Global::GAME::INFECTED_SUPER_ZOMBIE_PENALTY_SCORE) + ")");
 				}
 				else {
-					zombie_infection_score = &score[prev_player->GetIndex()];
+					zombie_infection_score = &score[player->GetIndex()];
 				}
 			}
 		}
@@ -455,9 +466,14 @@ int Game::LeftTimerTick() {
 		return Global::GAME::TIME_LIMIT;
 	}
 	int current_time = this->pause_timer == 0 ? clock() : this->pause_timer;
+	if (this->pause_timer_i_dont_want_to_use_it_but_HWI_said_it_is_necessary_bull_shit != -1) {
+		current_time = this->pause_timer_i_dont_want_to_use_it_but_HWI_said_it_is_necessary_bull_shit;
+	}
 	int elapsed_time = (current_time - this->timer) / CLOCKS_PER_SEC;
 	int remaining_time = Global::GAME::TIME_LIMIT - elapsed_time;
 	if (remaining_time < 0) {
+		this->timer = clock() - remaining_time;
+		this->score[this->current_turn]--;
 		remaining_time = 0;
 	}
 	return remaining_time;
@@ -465,4 +481,66 @@ int Game::LeftTimerTick() {
 
 bool Game::IsStarted() const {
 	return this->is_started;
+}
+
+void Game::Undo() {
+	if (this->hexagon_history.empty()) {
+		Log::System("No history to restore.");
+		return;
+	}
+	this->hexagon_after_history.push(this->hexagons);
+	this->hexagons = this->hexagon_history.top();
+	this->hexagon_history.pop();
+	this->player_after_history.push(this->players);
+	this->players = this->player_history.top();
+	this->player_history.pop();
+	this->score_after_history.push(this->score);
+	this->score = this->score_history.top();
+	this->score_history.pop();
+	int current_turn = this->current_turn - 1;
+	if (current_turn < 0) {
+		current_turn = this->players.size() - 1;
+	}
+	this->current_turn = current_turn;
+
+	this->teleporting_player = nullptr;
+	this->zombie_infection_score = nullptr;
+	this->timer = clock();
+
+	Log::System("Game state restored from history. Current turn: " + std::to_string(current_turn + 1));
+}
+
+void Game::Redo() {
+	if (this->hexagon_after_history.empty()) {
+		Log::System("No history to redo.");
+		return;
+	}
+	this->hexagon_history.push(this->hexagons);
+	this->hexagons = this->hexagon_after_history.top();
+	this->hexagon_after_history.pop();
+	this->player_history.push(this->players);
+	this->players = this->player_after_history.top();
+	this->player_after_history.pop();
+	this->score_history.push(this->score);
+	this->score = this->score_after_history.top();
+	this->score_after_history.pop();
+	int current_turn = this->current_turn + 1;
+	if (current_turn >= this->players.size()) {
+		current_turn = 0;
+	}
+	this->current_turn = current_turn;
+	this->teleporting_player = nullptr;
+	this->zombie_infection_score = nullptr;
+	this->timer = clock();
+	Log::System("Game state redone from history. Current turn: " + std::to_string(current_turn + 1));
+}
+
+void Game::PauseAndResume() {
+	if (this->pause_timer_i_dont_want_to_use_it_but_HWI_said_it_is_necessary_bull_shit == -1) {
+		this->pause_timer_i_dont_want_to_use_it_but_HWI_said_it_is_necessary_bull_shit = clock();
+	}
+	else {
+		this->timer += clock() - this->pause_timer_i_dont_want_to_use_it_but_HWI_said_it_is_necessary_bull_shit;
+		this->pause_timer_i_dont_want_to_use_it_but_HWI_said_it_is_necessary_bull_shit = -1;
+	}
 }
