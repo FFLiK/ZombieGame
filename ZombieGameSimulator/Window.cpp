@@ -105,11 +105,10 @@ void Window::__Process__() {
 	while (this->run) {
 		this->scene_mtx.lock();
 		double delta = (this->RunTime() - prev) - Input::GetInputDuration();
-		//Log::Debug(delta);
 		if (delta > 1 / (double)this->fps) {
 			prev += 1 / (double)this->fps;
 			SDL_RenderClear(this->ren);
-			for (int i = this->scene_list.size() - 1; i >= 0; i--) {
+			for (int i = (int)this->scene_list.size() - 1; i >= 0; i--) {
 				this->scene_list[i]->Rendering();
 			}
 			SDL_SetRenderDrawColor(this->ren, 0, 0, 0, 0);
@@ -117,7 +116,7 @@ void Window::__Process__() {
 			this->frame_cnt++;
 		}
 		this->event_mtx.lock();
-		for (int i = this->scene_list.size() - 1; i >= 0; i--) {
+		for (int i = (int)this->scene_list.size() - 1; i >= 0; i--) {
 			this->scene_list[i]->__Process__();
 		}
 		this->event_mtx.unlock();
@@ -142,9 +141,13 @@ int Window::Destroy() {
 EventType Window::PollEvent() {
 	SDL_WaitEvent(&this->evt);
 	lock_guard<recursive_mutex> lock(this->event_mtx);
-	switch (this->evt.type) {
-	case SDL_QUIT:
+	if (this->evt.type == SDL_QUIT) {
 		return QUIT;
+	}
+	if (this->scene_list.empty()) {
+		return NONE;
+	}
+	switch (this->evt.type) {
 	case SDL_KEYDOWN:
 		this->scene_list[0]->PushEvent(KEY_DOWN, this->evt.key.keysym.sym);
 		return KEY_DOWN;

@@ -148,7 +148,7 @@ bool Hexagon::IsInside(double x, double y) const {
 void Hexagon::UpdateTurnCount() {
 	if (this->prev_type != UNDEFINED) {
 		this->turn_cnt++;
-		if (this->turn_cnt == 4) {
+		if (this->turn_cnt == 8) {
 			this->type = this->prev_type;
 			this->prev_type = UNDEFINED;
 		}

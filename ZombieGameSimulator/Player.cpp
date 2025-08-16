@@ -31,7 +31,7 @@ Player::Player(const Player& other) {
 	this->state = other.state;
 	this->reserved_state = other.reserved_state;
 	this->moving_frame = other.moving_frame;
-	this->path = other.path;
+	this->path.clear();
 	this->index = other.index;
 	this->index_tex = nullptr;
 }
@@ -52,7 +52,7 @@ int Player::GetIndex() const {
 	return this->index;
 }
 
-void Player::DrawPlayer(SDL_Renderer* ren, bool activated, bool draw_left, bool draw_right) {
+void Player::DrawPlayer(SDL_Renderer* ren, bool activated, int overlapped_count, int overlapped_index) {
 	if (this->index_tex == nullptr) {
 		this->index_tex = LoadText(std::to_string(this->index + 1).c_str(), ren, Global::GAME::PLAYER_FONT_SIZE, "font", 255, 255, 255);
 	}
@@ -74,21 +74,8 @@ void Player::DrawPlayer(SDL_Renderer* ren, bool activated, bool draw_left, bool 
 			dst.x = static_cast<int>(this->center_x - dst.w / 2);
 			dst.y = static_cast<int>(this->center_y - dst.h / 2);
 
-			if (!draw_left && draw_right) {
-				src.x = src.w / 2;
-			}
-			else if (draw_left && !draw_right) {
-				src.x = 0;
-				src.w = src.w / 2;
-			}
-			if (!draw_left && draw_right) {
-				dst.x += dst.w / 2;
-				dst.w = dst.w / 2;
-			}
-			else if (draw_left && !draw_right) {
-				dst.w = dst.w / 2;
-			}
-			SDL_RenderCopy(ren, Resources::player_human[this->index], &src, &dst);
+			if (overlapped_index == overlapped_count)
+				SDL_RenderCopy(ren, Resources::player_human[this->index], &src, &dst);
 			break;
 
 		case PLAYER_ZOMBIE:
@@ -103,21 +90,8 @@ void Player::DrawPlayer(SDL_Renderer* ren, bool activated, bool draw_left, bool 
 			dst.x = static_cast<int>(this->center_x - dst.w / 2);
 			dst.y = static_cast<int>(this->center_y - dst.h / 2);
 
-			if (!draw_left && draw_right) {
-				src.x = src.w / 2;
-			}
-			else if (draw_left && !draw_right) {
-				src.x = 0;
-				src.w = src.w / 2;
-			}
-			if (!draw_left && draw_right) {
-				dst.x += dst.w / 2;
-				dst.w = dst.w / 2;
-			}
-			else if (draw_left && !draw_right) {
-				dst.w = dst.w / 2;
-			}
-			SDL_RenderCopy(ren, Resources::player_zombie[this->index], &src, &dst);
+			if (overlapped_index == overlapped_count)
+				SDL_RenderCopy(ren, Resources::player_zombie[this->index], &src, &dst);
 			break;
 
 		case PLAYER_SUPER_ZOMBIE:
@@ -146,16 +120,8 @@ void Player::DrawPlayer(SDL_Renderer* ren, bool activated, bool draw_left, bool 
 				vy[i] = points[i].y;
 			}
 
-			if (!draw_left && draw_right) {
-				vx[2] = vx[1];
-				vx[3] = vx[1];
-			}
-			else if (draw_left && !draw_right) {
-				vx[0] = vx[4];
-				vx[5] = vx[4];
-			}
-
-			filledPolygonRGBA(ren, vx, vy, 6, 150, 150, 150, 255);
+			if (overlapped_index == overlapped_count)
+				filledPolygonRGBA(ren, vx, vy, 6, 150, 150, 150, 255);
 			if (activated) {
 				polygonColor(ren, vx, vy, 6, 0xFF0000FF);
 			}
@@ -170,16 +136,8 @@ void Player::DrawPlayer(SDL_Renderer* ren, bool activated, bool draw_left, bool 
 				vy[i] = points[i].y;
 			}
 
-			if (!draw_left && draw_right) {
-				vx[2] = vx[1];
-				vx[3] = vx[1];
-			}
-			else if (draw_left && !draw_right) {
-				vx[0] = vx[4];
-				vx[5] = vx[4];
-			}
-
-			filledPolygonRGBA(ren, vx, vy, 6, 150, 190, 40, 255);
+			if (overlapped_index == overlapped_count)
+				filledPolygonRGBA(ren, vx, vy, 6, 150, 190, 40, 255);
 			if (activated) {
 				polygonColor(ren, vx, vy, 6, 0xFF0000FF);
 			}
@@ -213,11 +171,11 @@ void Player::DrawPlayer(SDL_Renderer* ren, bool activated, bool draw_left, bool 
 		dst.x = static_cast<int>(this->center_x - dst.w / 2);
 		dst.y = static_cast<int>(this->center_y - dst.h / 2);
 		double w = points[1].y - points[4].y;
-		if (!draw_left && draw_right) {
-			dst.x = static_cast<int>(this->center_x + w / 4 - dst.w / 2);
-		}
-		else if (draw_left && !draw_right) {
-			dst.x = static_cast<int>(this->center_x - w / 4 - dst.w / 2);
+		if (overlapped_count) {
+			double rad = w * 0.25;
+			double div = overlapped_count + 1;
+			dst.x -= cos((double)overlapped_index * M_PI * 2.0 / div) * rad;
+			dst.y += sin((double)overlapped_index * M_PI * 2.0 / div) * rad;
 		}
 		SDL_RenderCopy(ren, this->index_tex, &src, &dst);
 	}

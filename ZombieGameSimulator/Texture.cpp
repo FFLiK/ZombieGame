@@ -4,6 +4,8 @@
 #include <iostream>
 #include <string>
 #include <cstdlib> 
+#include <cmath>
+#include <vector>
 #include "Global.h"
 #include "Log.h"
 #include "han2unicode.h"
@@ -146,37 +148,140 @@ SDL_Texture* LoadImage(const char* filename, SDL_Renderer* renderer) {
 }
 
 SDL_Texture* LoadText(const char* str, SDL_Renderer* renderer, int size, const char* fontfile_name, int r, int g, int b) {
-	TTF_Font* font;
-	SDL_Surface* surface;
-	SDL_Texture* texture;
-	size = size * Global::WIN::SIZE_MULTIPLIER;
-
-	font = TTF_OpenFont(FONT(fontfile_name), size);
-
-	SDL_Color color;
-	color.r = r;
-	color.g = g;
-	color.b = b;
-	color.a = 255;
-
-	Uint16 unicode[32768];
-	han2unicode(str, unicode);
-
-	surface = TTF_RenderUNICODE_Blended(font, unicode, color);
-
-	texture = SDL_CreateTextureFromSurface(renderer, surface);
-
-	if (!texture) {
-		Log::FormattedDebug("Texture", "LoadText", SDL_GetError());
+	if (!renderer || !str || !fontfile_name) {
+		Log::FormattedDebug("Texture", "LoadText", "Invalid parameter(s).");
 		return nullptr;
 	}
-	else {
-		Log::FormattedDebug("Texture", "LoadText", "Loaded text: " + string(str));
+
+	const int scaledSize = size * Global::WIN::SIZE_MULTIPLIER;
+
+	TTF_Font* font = TTF_OpenFont(FONT(fontfile_name), scaledSize);
+	if (!font) {
+		Log::FormattedDebug("Texture", "LoadText", std::string("Failed to open font: ") + TTF_GetError());
+		return nullptr;
 	}
 
-	SDL_FreeSurface(surface);
+	SDL_Color color;
+	color.r = static_cast<Uint8>(r);
+	color.g = static_cast<Uint8>(g);
+	color.b = static_cast<Uint8>(b);
+	color.a = 255;
 
-	//delete font;
+	std::vector<std::string> lines;
+	{
+		const char* p = str;
+		const char* lineStart = p;
+		for (; *p; ++p) {
+			if (*p == '\n') {
+				lines.emplace_back(lineStart, p - lineStart);
+				lineStart = p + 1;
+			}
+		}
+		lines.emplace_back(lineStart, p - lineStart);
+		for (auto& ln : lines) {
+			if (!ln.empty() && ln.back() == '\r') ln.pop_back();
+		}
+	}
+
+	struct LineItem {
+		SDL_Surface* surf{ nullptr };
+		int w{ 0 };
+		int h{ 0 };
+	};
+
+	std::vector<LineItem> items;
+	items.reserve(lines.size());
+
+	int max_w = 0;
+	int total_h = 0;
+	const int lineSkip = TTF_FontLineSkip(font);
+
+	for (const auto& ln : lines) {
+		LineItem item;
+
+		if (ln.empty()) {
+			item.w = 0;
+			item.h = lineSkip > 0 ? lineSkip : scaledSize;
+			items.push_back(item);
+			max_w = std::max(max_w, item.w);
+			total_h += item.h;
+			continue;
+		}
+
+		Uint16 unicode[32768];
+		han2unicode(ln.c_str(), unicode);
+
+		SDL_Surface* surface = TTF_RenderUNICODE_Blended(font, unicode, color);
+		if (!surface) {
+			Log::FormattedDebug("Texture", "LoadText", std::string("Failed to render line: ") + TTF_GetError());
+			for (auto& it : items) {
+				if (it.surf) SDL_FreeSurface(it.surf);
+			}
+			TTF_CloseFont(font);
+			return nullptr;
+		}
+
+		item.w = surface->w;
+		item.h = surface->h;
+		item.surf = surface;
+
+		items.push_back(item);
+
+		max_w = std::max(max_w, item.w);
+		total_h += item.h > 0 ? item.h : (lineSkip > 0 ? lineSkip : scaledSize);
+	}
+
+	if (max_w <= 0) max_w = 1;
+	if (total_h <= 0) total_h = lineSkip > 0 ? lineSkip : scaledSize;
+
+	total_h += 20 * Global::WIN::SIZE_MULTIPLIER * (lines.size() - 1);
+
+	SDL_Surface* finalSurface = SDL_CreateRGBSurfaceWithFormat(
+		0, max_w, total_h, 32, SDL_PIXELFORMAT_RGBA32
+	);
+	if (!finalSurface) {
+		Log::FormattedDebug("Texture", "LoadText", std::string("Failed to create final surface: ") + SDL_GetError());
+		for (auto& it : items) {
+			if (it.surf) SDL_FreeSurface(it.surf);
+		}
+		TTF_CloseFont(font);
+		return nullptr;
+	}
+
+	SDL_FillRect(finalSurface, nullptr, SDL_MapRGBA(finalSurface->format, 0, 0, 0, 0));
+
+	int y = 0;
+	for (const auto& it : items) {
+		const int drawH = (it.h > 0 ? it.h : (lineSkip > 0 ? lineSkip : scaledSize)) + 20 * Global::WIN::SIZE_MULTIPLIER;
+		if (it.surf && it.w > 0 && it.h > 0) {
+			SDL_Rect dst;
+			dst.w = it.w;
+			dst.h = it.h;
+			dst.x = (max_w - it.w) / 2;
+			dst.y = y;
+			SDL_BlitSurface(it.surf, nullptr, finalSurface, &dst);
+		}
+		y += drawH;
+	}
+
+	SDL_Texture* finalTexture = SDL_CreateTextureFromSurface(renderer, finalSurface);
+	if (!finalTexture) {
+		Log::FormattedDebug("Texture", "LoadText", std::string("Failed to create texture from surface: ") + SDL_GetError());
+		SDL_FreeSurface(finalSurface);
+		for (auto& it : items) {
+			if (it.surf) SDL_FreeSurface(it.surf);
+		}
+		TTF_CloseFont(font);
+		return nullptr;
+	}
+	SDL_SetTextureBlendMode(finalTexture, SDL_BLENDMODE_BLEND);
+
+	SDL_FreeSurface(finalSurface);
+	for (auto& it : items) {
+		if (it.surf) SDL_FreeSurface(it.surf);
+	}
 	TTF_CloseFont(font);
-	return texture;
+
+	Log::FormattedDebug("Texture", "LoadText", "Loaded multiline text: " + std::string(str));
+	return finalTexture;
 }

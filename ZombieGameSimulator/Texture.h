@@ -1,5 +1,6 @@
 #pragma once
 #include <SDL.h>
+#undef LoadImage
 
 void DrawCircle(SDL_Point point, SDL_Renderer* renderer, int circle_size = 15, int r = 255, int g = 255, int b = 255, int a = 255);
 void DrawPoint(SDL_Point point, SDL_Renderer* renderer, int circle_size = 15, int r = 255, int g = 255, int b = 255, int a = 255);

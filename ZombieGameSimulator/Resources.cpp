@@ -18,6 +18,16 @@ SDL_Texture* Resources::player_human[6] = { nullptr, nullptr, nullptr, nullptr, 
 SDL_Texture* Resources::player_zombie[6] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 SDL_Texture* Resources::player_super_zombie = nullptr;
 
+SDL_Texture* Resources::minigame_background = nullptr;
+
+SDL_Texture* Resources::event_roulette_num = nullptr;
+SDL_Texture* Resources::event_roulette_sign = nullptr;
+SDL_Texture* Resources::minigame_roulette = nullptr;
+
+PdfViewer* Resources::event_pdf = nullptr;
+PdfViewer* Resources::minigame_unified_voice_game_pdf = nullptr;
+PdfViewer* Resources::minigame_emoji_game_pdf = nullptr;
+
 void Resources::InitResources(SDL_Renderer* renderer) {
 	if (initialized) {
 		return;
@@ -38,6 +48,15 @@ void Resources::InitResources(SDL_Renderer* renderer) {
 		player_zombie[i] = LoadImage(zombie_name.c_str(), renderer);
 	}
 	player_super_zombie = LoadImage("superzombie", renderer);
+
+	minigame_background = LoadImage("minigame_background", renderer);
+	event_roulette_num = LoadImage("event_roulette_num", renderer);
+	event_roulette_sign = LoadImage("event_roulette_sign", renderer);
+	minigame_roulette = LoadImage("minigame_roulette", renderer);
+
+	event_pdf = new PdfViewer("event", renderer);
+	minigame_unified_voice_game_pdf = new PdfViewer("minigame_unified_voice_game", renderer);
+	minigame_emoji_game_pdf = new PdfViewer("minigame_emoji_game", renderer);
 }
 
 void Resources::QuitResources() {
@@ -55,6 +74,10 @@ void Resources::QuitResources() {
 		SDL_DestroyTexture(player_zombie[i]);
 	}
 	SDL_DestroyTexture(player_super_zombie);
+	delete event_pdf;
+	delete minigame_unified_voice_game_pdf;
+	delete minigame_emoji_game_pdf;
+
 	background = nullptr;
 	tile_normal = nullptr;
 	tile_papal = nullptr;
@@ -65,4 +88,9 @@ void Resources::QuitResources() {
 		player_zombie[i] = nullptr;
 	}
 	player_super_zombie = nullptr;
+	event_pdf = nullptr;
+	minigame_background = nullptr;
+	minigame_roulette = nullptr;
+
+	initialized = false;
 }

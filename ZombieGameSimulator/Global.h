@@ -19,14 +19,14 @@ namespace Global {
 	class GAME {
 	public:
 		static constexpr double HEXAGON_SIZE = 35;
-		static constexpr double PLAYER_SIZE = 25;
-		static constexpr double SUPER_ZOMBIE_SIZE = 30;
+		static constexpr double PLAYER_SIZE = 22;
+		static constexpr double SUPER_ZOMBIE_SIZE = 32;
 
-		static constexpr double TEXTURE_SIZE_MULTIPLIER = 1.355;
+		static constexpr double TEXTURE_SIZE_MULTIPLIER = 1.359;
 
 		static constexpr int TIME_LIMIT = 60;
 
-		static constexpr int PLAYER_FONT_SIZE = 32;
+		static constexpr int PLAYER_FONT_SIZE = 28;
 		static constexpr int SCORE_FONT_SIZE = 24;
 		static constexpr int TIMER_FONT_SIZE = 96;
 
@@ -39,14 +39,17 @@ namespace Global {
 	public:
 		static constexpr const char* NAME = "The Final Human";
 		static constexpr const char* DEV_NAME = "Zombie Game";
-		static constexpr const char* VERSION = "2.0.0";
+		static constexpr const char* VERSION = "3.0.0";
 		static const bool IS_RELEASE = true;
-		static constexpr const char* DEVELOPER = "FSC";
+		static constexpr const char* DEVELOPER = "Freshman Student Council";
 
 		static const bool USE_APPDATA = true;
 		static constexpr const char* RESOURCE_PATH = "res\\";
+		static constexpr const char* LOG_PATH = "log\\";
 		static constexpr const char* IMAGE_EXTENSION = ".asset"; // .png or .asset
 		static constexpr const char* FONT_EXTENSION = ".type"; // .ttf or .type
+		static constexpr const char* PDF_EXTENSION = ".asset"; // .pdf of .asset
+		static constexpr const char* LOG_EXTENSION = ".log"; // .log
 
 		static const bool DEBUG_MODE = false;
 		static bool TEXTURE_RENDERING;
@@ -59,6 +62,9 @@ namespace Global {
 	class EVENT {
 	public:
 		static int const MAIN_FONT_SIZE = 48;
+		static int const STORY_FONT_SIZE = 36;
+		static int const ROULETTE_FONT_SIZE = 32;
+		static int const ROULETTE_SIZE = 250;
 	};
 }
 

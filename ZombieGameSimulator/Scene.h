@@ -2,7 +2,6 @@
 #include <SDL.h>
 #include <Event.h>
 #include <queue>
-using namespace std;
 
 class Scene {
 public:
@@ -22,6 +21,6 @@ public:
 
 protected:
 	SDL_Renderer* ren = nullptr;
-	queue<Event> event_queue;
+	std::queue<Event> event_queue;
 };
 

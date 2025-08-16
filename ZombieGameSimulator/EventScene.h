@@ -1,6 +1,7 @@
 #pragma once
 #include "Scene.h"
 #include "Game.h"
+#include "Input.h"
 
 class Slide {
 public:
@@ -10,9 +11,18 @@ public:
 		SEMI_APPEAR
 	};
 
-	Slide(int level, SDL_Texture* texture, Appearance appearance)
-		: level(level), texture(texture), appearance(appearance) {
+	enum Type {
+		TEXT,
+		BACKGROUND,
+		ROULETTE,
+		INPUT
+	};
+
+	Slide(Type type, int level, SDL_Texture* texture, Appearance appearance)
+		: type(type), level(level), texture(texture), appearance(appearance) {
 	}
+
+	Type type;
 	int level;
 	SDL_Texture* texture = nullptr;
 	Appearance appearance;
@@ -30,6 +40,23 @@ enum class GameEvent {
 	SCORE_ROULETTE_EVENT          // Score event (Score roulette)
 };
 
+enum Spin {
+	NO_SPIN = 0x00,
+	NATURAL_NUMBER_ROULETTE_SPIN = 0x01,
+	SIGN_ROULETTE_SPIN = 0x02,
+};
+
+class RouletteBoard {
+public:
+	double fraction;
+	int data;
+	SDL_Texture* texture;
+
+	RouletteBoard(double fraction, int data, SDL_Texture* texture)
+		: fraction(fraction), data(data), texture(texture) {
+	}
+};
+
 class EventScene : public Scene {
 public:
 	EventScene(Game* game);
@@ -44,14 +71,27 @@ private:
 	int NormalProcess() override;
 
 	GameEvent game_event;
+	int event_stroy_seed;
 
 	int level;
-	const int transition_level_delta = 40 * Global::WIN::FRAME_RATE_MULTIPLIER;
+	const int original_transition_level_delta = 40;
+	const int transition_level_delta = original_transition_level_delta * Global::WIN::FRAME_RATE_MULTIPLIER;
+	
 	vector<Slide> slides;
 
+	SDL_Texture* current_background;
 	int background_alpha = 0;
 	SDL_Texture* current_text;
 	int text_alpha = 0;
+	int roulette_alpha = 0;
+
+	vector<RouletteBoard> roulette_board_num;
+	vector<RouletteBoard> roulette_board_sign;
+
+	int roulette_active_num = -1;
+	int roulette_spin_speed = 7;
+	int roulette_angle_num = 0;
+	int roulette_angle_sign = 0;
 	
 	bool is_finished = false;
 
@@ -62,5 +102,7 @@ private:
 	bool pause = false;
 	bool enable_event_process = false;
 	Hexagon* target_hexagon;
+
+	Input* input;
 };
 

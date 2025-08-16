@@ -24,6 +24,7 @@ GameScene::~GameScene() {
 
 int GameScene::Rendering() {
 	// Render timer
+
 	SDL_Rect src, dst;
 	SDL_QueryTexture(this->timer_title_tex, NULL, NULL, &src.w, &src.h);
 	src.x = 0;
@@ -52,51 +53,74 @@ int GameScene::Rendering() {
 		dst.h = src.h;
 		dst.x = Global::WIN::SCREEN_WIDTH - 200 * Global::WIN::SIZE_MULTIPLIER;
 		dst.y = 100 * Global::WIN::SIZE_MULTIPLIER + i * (src.h + 8 * Global::WIN::SIZE_MULTIPLIER);
+		if (this->game->GetCurrentTurn() == i) {
+			SDL_SetTextureColorMod(this->score_text_tex[i], 100, 255, 255);
+		}
+		else {
+			SDL_SetTextureColorMod(this->score_text_tex[i], 255, 255, 255);
+		}
 		SDL_RenderCopy(this->ren, this->score_text_tex[i], NULL, &dst);
 	}
 
 	// Render the board
 	for (const auto& hexagon : *(game->GetHexagons())) {
-		hexagon.DrawHexagon(this->ren);
-	}
-	double prev_x = -1, prev_y = -1;
-	for (const auto& hexagon : path) {
-		double center_x, center_y;
-		Hexagon::GetCenterPointFromHexagonCoordinate(hexagon->GetX(), hexagon->GetY(), center_x, center_y);
-		filledCircleRGBA(this->ren, center_x, center_y, 5, 255, 0, 0, 200);
-		if (prev_x != -1 && prev_y != -1) {
-			lineRGBA(this->ren, prev_x, prev_y, center_x, center_y, 255, 0, 0, 200);
+		if (hexagon.GetProperty() == HEXAGON_NORMAL) {
+			hexagon.DrawHexagon(this->ren);
 		}
-		prev_x = center_x;
-		prev_y = center_y;
+	}
+	for (const auto& hexagon : *(game->GetHexagons())) {
+		if (hexagon.GetProperty() != HEXAGON_NORMAL && hexagon.GetProperty() != HEXAGON_EVENT) {
+			hexagon.DrawHexagon(this->ren);
+		}
+	}
+	for (const auto& hexagon : *(game->GetHexagons())) {
+		if (hexagon.GetProperty() == HEXAGON_EVENT) {
+			hexagon.DrawHexagon(this->ren);
+		}
+	}
+	
+	if (!Global::SYSTEM::TEXTURE_RENDERING) {
+		double prev_x = -1, prev_y = -1;
+		for (const auto& hexagon : path) {
+			double center_x, center_y;
+			Hexagon::GetCenterPointFromHexagonCoordinate(hexagon->GetX(), hexagon->GetY(), center_x, center_y);
+			filledCircleRGBA(this->ren, center_x, center_y, 5, 255, 0, 0, 200);
+			if (prev_x != -1 && prev_y != -1) {
+				lineRGBA(this->ren, prev_x, prev_y, center_x, center_y, 255, 0, 0, 200);
+			}
+			prev_x = center_x;
+			prev_y = center_y;
+		}
 	}
 
 	// Render the players
 	for (int i = game->GetPlayers()->size() - 1; i >= 0; --i) {
-		bool draw_half_left = true;
-		bool draw_half_right = true;
+		int overlapped_count = 0;
+		int overlapped_index = 0;
 		
 		if (game->GetPlayers()->at(i).IsArrived()) {
 			for (int j = 0; j < game->GetPlayers()->size() - 1; ++j) {
 				if (game->GetPlayers()->at(i).GetX() == game->GetPlayers()->at(j).GetX()
 					&& game->GetPlayers()->at(i).GetY() == game->GetPlayers()->at(j).GetY()) {
 					if (game->GetPlayers()->at(j).IsArrived()) {
-						if (i > j)
-							draw_half_left = false;
-						else if (i < j)
-							draw_half_right = false;
+						if (i == j) continue;
+						overlapped_count++;
+						if (j < i) overlapped_index++;
 					}
 				}
 			}
 		}
 		
 		game->GetPlayers()->at(i).Move();
-		game->GetPlayers()->at(i).DrawPlayer(this->ren, (i == game->GetCurrentTurn()), draw_half_left, draw_half_right);
+		game->GetPlayers()->at(i).DrawPlayer(this->ren, (i == game->GetCurrentTurn()), overlapped_count, overlapped_index);
 	}
 
 	if (game->HaveToUpdate()) {
 		if (game->IsEventTriggered()) {
 			game->ExecuteEvent();
+		}
+		else if (game->IsMinigameTriggerd()) {
+			game->ExecuteMinigame();
 		}
 		game->UpdateTurn();
 	}

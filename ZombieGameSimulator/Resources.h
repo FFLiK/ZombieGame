@@ -1,8 +1,12 @@
 #pragma once
 #include <SDL.h>
+#include <PdfViewer.h>
+
 class Resources {
 public:
 	static SDL_Texture* background;
+
+	static SDL_Texture* minigame_background;
 
 	static SDL_Texture* tile_normal;
 	static SDL_Texture* tile_papal;
@@ -13,6 +17,14 @@ public:
 	static SDL_Texture* player_human[6];
 	static SDL_Texture* player_zombie[6];
 	static SDL_Texture* player_super_zombie;
+
+	static SDL_Texture* event_roulette_num;
+	static SDL_Texture* event_roulette_sign;
+	static SDL_Texture* minigame_roulette;
+
+	static PdfViewer* event_pdf;
+	static PdfViewer* minigame_unified_voice_game_pdf;
+	static PdfViewer* minigame_emoji_game_pdf;
 
 	static void InitResources(SDL_Renderer* renderer);
 	static void QuitResources();

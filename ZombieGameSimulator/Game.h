@@ -19,25 +19,26 @@ private:
 	std::stack<vector<Hexagon>> hexagon_history;
 	std::stack<vector<Player>> player_history;
 	std::stack<vector<int>> score_history;
+	std::stack<int> turn_history;
 	std::stack<vector<Hexagon>> hexagon_after_history;
 	std::stack<vector<Player>> player_after_history;
 	std::stack<vector<int>> score_after_history;
+	std::stack<int> turn_after_history;
 
 	bool Check(double cur_x, double cur_y, double target_x, double target_y, int step, bool first_move, Hexagon* hexagon, Player* player, std::vector<Hexagon*>* path);
 
 	Player* teleporting_player;
 	Player* event_triggered_player;
+	Player* minigame_triggered_player;
 
 	int timer;
 	int pause_timer = 0;
 	int pause_timer_i_dont_want_to_use_it_but_HWI_said_it_is_necessary_bull_shit = 0;
 	
-	int* zombie_infection_score = nullptr;
-
 	bool have_to_update = false;
 
 	Window* win;
-	Scene* event_scene;
+	Scene* event_scene, *minigame_scene;
 
 	bool is_started;
 
@@ -52,7 +53,7 @@ public:
 	std::vector<Hexagon>* GetHexagons();
 	std::vector<Player>* GetPlayers();
 	Hexagon* GetHexagon(double x, double y);
-	Player* GetPlayer(double x, double y);
+	std::vector<Player*> GetPlayers(double x, double y);
 	Player* GetCurrentPlayer();
 	int GetCurrentTurn() const;
 	int GetScore(int index) const;
@@ -68,6 +69,8 @@ public:
 
 	bool IsEventTriggered();
 	void ExecuteEvent();
+	bool IsMinigameTriggerd();
+	void ExecuteMinigame();
 
 	int LeftTimerTick();
 
@@ -79,4 +82,5 @@ public:
 	void PauseAndResume();
 
 	friend class EventScene;
+	friend class MinigameScene;
 };

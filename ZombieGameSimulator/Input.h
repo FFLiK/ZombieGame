@@ -3,10 +3,18 @@
 #include <iostream>
 #include <Global.h>
 #include <chrono>
+#include <limits>
+#include <SDL.h>
+#include <vector>
+#include <Event.h>
+#undef max
 
 class Input {
 private:
 	static double input_duration;
+
+	int index;
+	std::vector<SDL_Texture*> input_textures;
 
 public:
 	static std::string GetInputString(const std::string &prompt) {
@@ -53,4 +61,12 @@ public:
 	static double GetInputDuration() {
 		return input_duration;
 	}
+
+	Input();
+	~Input();
+
+	void AddString(std::string text, SDL_Renderer *ren);
+	SDL_Texture* GetTexture();
+	int ProcessEvent(Event& evt);
+	void SetIndex(int idx);
 };

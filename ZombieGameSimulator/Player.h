@@ -35,7 +35,7 @@ public:
 	PlayerState GetState() const;
 	int GetIndex() const;
 
-	void DrawPlayer(SDL_Renderer* ren, bool activated, bool draw_left, bool draw_right);
+	void DrawPlayer(SDL_Renderer* ren, bool activated, int overlapped_count, int overlapped_index);
 	void SetPosition(double x, double y, std::vector<Hexagon*> *path);
 	void SetState(PlayerState state);
 

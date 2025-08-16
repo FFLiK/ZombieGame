@@ -1,3 +1,4 @@
+#pragma once
 #include <SDL.h>
 
 enum EventType { NONE, QUIT, KEY_DOWN, KEY_UP, MOUSE_UP, MOUSE_DOWN, MOUSE_MOVE };
