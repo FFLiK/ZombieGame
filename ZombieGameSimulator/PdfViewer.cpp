@@ -9,7 +9,9 @@ using namespace std;
 #define PDF(name) ((Global::SYSTEM::USE_APPDATA ? (string)std::getenv("APPDATA") + "\\" + Global::SYSTEM::NAME + "\\" : (string)"") + (string)Global::SYSTEM::RESOURCE_PATH + name + Global::SYSTEM::PDF_EXTENSION).c_str()
 
 PdfViewer::PdfViewer(std::string name, SDL_Renderer *ren) {
-	this->pdf_document = FPDF_LoadDocument(PDF(name), nullptr);
+	std::filesystem::path p = PDF(name);
+	std::string pUtf8 = p.u8string();
+	this->pdf_document = FPDF_LoadDocument(pUtf8.c_str(), nullptr);
 	if (!this->pdf_document) {
 		Log::FormattedDebug("PdfViewer", "Constructor", "Failed to load PDF document: " + name + ".");
 		return;

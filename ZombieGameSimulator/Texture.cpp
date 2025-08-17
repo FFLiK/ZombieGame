@@ -134,7 +134,9 @@ void DrawLine(SDL_Point begin, SDL_Point end, SDL_Renderer* renderer, int circle
 SDL_Texture* LoadImage(const char* filename, SDL_Renderer* renderer) {
 	SDL_Surface* surface;
 	SDL_Texture* texture;
-	surface = IMG_Load(IMAGE(filename));
+	std::filesystem::path p = IMAGE(filename);
+	std::string pUtf8 = p.u8string();
+	surface = IMG_Load(pUtf8.c_str());
 	if (!surface) {
 		Log::FormattedDebug("Texture", "LoadImage", IMG_GetError());
 		return nullptr;
@@ -154,8 +156,9 @@ SDL_Texture* LoadText(const char* str, SDL_Renderer* renderer, int size, const c
 	}
 
 	const int scaledSize = size * Global::WIN::SIZE_MULTIPLIER;
-
-	TTF_Font* font = TTF_OpenFont(FONT(fontfile_name), scaledSize);
+	std::filesystem::path p = FONT(fontfile_name);
+	std::string pUtf8 = p.u8string();
+	TTF_Font* font = TTF_OpenFont(pUtf8.c_str(), scaledSize);
 	if (!font) {
 		Log::FormattedDebug("Texture", "LoadText", std::string("Failed to open font: ") + TTF_GetError());
 		return nullptr;
