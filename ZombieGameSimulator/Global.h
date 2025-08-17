@@ -39,7 +39,7 @@ namespace Global {
 	public:
 		static constexpr const char* NAME = "The Final Human";
 		static constexpr const char* DEV_NAME = "Zombie Game";
-		static constexpr const char* VERSION = "3.1.1";
+		static constexpr const char* VERSION = "3.2.0";
 		static const bool IS_RELEASE = true;
 		static constexpr const char* DEVELOPER = "Freshman Student Council";
 

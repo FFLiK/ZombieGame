@@ -154,7 +154,7 @@ EventType Window::PollEvent() {
 	case SDL_KEYUP:
 		this->scene_list[0]->PushEvent(KEY_UP, this->evt.key.keysym.sym);
 		if (this->evt.key.keysym.sym == SDLK_ESCAPE) {
-			this->run = false;
+			return QUIT;
 		}
 		else if (this->evt.key.keysym.sym == SDLK_F11) {
 			if (!this->is_full_screen) {

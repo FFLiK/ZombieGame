@@ -41,6 +41,12 @@ int Input::ProcessEvent(Event& evt) {
 				this->index = input_value;
 			}
 		}
+		else if (evt.key >= SDLK_KP_1 && evt.key <= SDLK_KP_9) {
+			int input_value = evt.key - SDLK_KP_1 + 1;
+			if (input_value < this->input_textures.size()) {
+				this->index = input_value;
+			}
+		}
 	}
 	return 0;
 }
