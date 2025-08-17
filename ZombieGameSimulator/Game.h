@@ -30,6 +30,7 @@ private:
 	Player* teleporting_player;
 	Player* event_triggered_player;
 	Player* minigame_triggered_player;
+	Player* final_player;
 
 	int timer;
 	int pause_timer = 0;
@@ -38,7 +39,7 @@ private:
 	bool have_to_update = false;
 
 	Window* win;
-	Scene* event_scene, *minigame_scene;
+	Scene* event_scene, * minigame_scene, * final_human_scene;
 
 	bool is_started;
 
@@ -71,6 +72,8 @@ public:
 	void ExecuteEvent();
 	bool IsMinigameTriggerd();
 	void ExecuteMinigame();
+	bool IsFinalhumanTriggerd();
+	void ExecuteFinalHuman();
 
 	int LeftTimerTick();
 
@@ -78,9 +81,11 @@ public:
 
 	void Undo();
 	void Redo();
+	void Save();
 
 	void PauseAndResume();
 
 	friend class EventScene;
 	friend class MinigameScene;
+	friend class FinalHumanScene;
 };

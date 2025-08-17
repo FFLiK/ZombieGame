@@ -116,7 +116,10 @@ int GameScene::Rendering() {
 	}
 
 	if (game->HaveToUpdate()) {
-		if (game->IsEventTriggered()) {
+		if (game->IsFinalhumanTriggerd()) {
+			game->ExecuteFinalHuman();
+		}
+		else if (game->IsEventTriggered()) {
 			game->ExecuteEvent();
 		}
 		else if (game->IsMinigameTriggerd()) {
@@ -189,6 +192,7 @@ int GameScene::EventProcess(Event& evt) {
 
 		if (evt.mouse == MOUSE_RIGHT && evt.T == MOUSE_UP) {
 			Log::System("Forced turn change by the right click.");
+			game->Save();
 			game->UpdateTurn();
 		}
 

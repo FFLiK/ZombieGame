@@ -31,7 +31,7 @@ namespace Global {
 		static constexpr int TIMER_FONT_SIZE = 96;
 
 		static const int HUMAN_MOVING_SCORE = 1;
-		static const int FINAL_HUMAN_MOVING_SCORE = 8;
+		static const int FINAL_HUMAN_MOVING_SCORE = 4;
 		static const int INFECTED_SUPER_ZOMBIE_PENALTY_SCORE = -3;
 	};
 
@@ -39,7 +39,7 @@ namespace Global {
 	public:
 		static constexpr const char* NAME = "The Final Human";
 		static constexpr const char* DEV_NAME = "Zombie Game";
-		static constexpr const char* VERSION = "3.0.0";
+		static constexpr const char* VERSION = "3.1.0";
 		static const bool IS_RELEASE = true;
 		static constexpr const char* DEVELOPER = "Freshman Student Council";
 

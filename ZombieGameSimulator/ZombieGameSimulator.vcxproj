@@ -22,6 +22,7 @@
     <ClInclude Include="BackgroundScene.h" />
     <ClInclude Include="Event.h" />
     <ClInclude Include="EventScene.h" />
+    <ClInclude Include="FinalHumanScene.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameScene.h" />
     <ClInclude Include="Global.h" />
@@ -41,6 +42,7 @@
   <ItemGroup>
     <ClCompile Include="BackgroundScene.cpp" />
     <ClCompile Include="EventScene.cpp" />
+    <ClCompile Include="FinalHumanScene.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameScene.cpp" />
     <ClCompile Include="Global.cpp" />
@@ -159,7 +161,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_ttf.lib;SDL2_image.lib;SDL2_gfx.lib;pdfium.dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>

@@ -71,6 +71,7 @@ int main(int argc, char *argv[]) {
 	IMG_Quit();
 	TTF_Quit();
 	SDL_Quit();
+	Log::SaveLogFile();
 	Log::CloseLogFile();
 	return 0;
 }

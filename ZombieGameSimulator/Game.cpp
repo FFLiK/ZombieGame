@@ -6,6 +6,7 @@
 #include <Input.h>
 #include <EventScene.h>
 #include <MinigameScene.h>
+#include <FinalHumanScene.h>
 
 Game::Game(Window *win) : rng(std::random_device{}()) {
 	Log::System("Initializing game...");
@@ -42,10 +43,12 @@ Game::Game(Window *win) : rng(std::random_device{}()) {
 	this->teleporting_player = nullptr;
 	this->event_triggered_player = nullptr;
 	this->minigame_triggered_player = nullptr;
+	this->final_player = nullptr;
 
 	this->win = win;
 	this->event_scene = nullptr;
 	this->minigame_scene = nullptr;
+	this->final_human_scene = nullptr;
 	this->is_started = false;
 
 	score.clear();
@@ -59,15 +62,6 @@ Game::Game(Window *win) : rng(std::random_device{}()) {
 }
 
 Game::~Game() {
-	Log::System("Destroying game resources...");
-	if (this->event_scene) {
-		delete this->event_scene;
-		this->event_scene = nullptr;
-	}
-	if (this->minigame_scene) {
-		delete this->minigame_scene;
-		this->minigame_scene = nullptr;
-	}
 	Log::System("Game resources destroyed.");
 }
 
@@ -271,14 +265,7 @@ void Game::Move(double x, double y) {
 	this->have_to_update = true;
 	this->pause_timer_i_dont_want_to_use_it_but_HWI_said_it_is_necessary_bull_shit = -1;
 
-	this->hexagon_history.push(this->hexagons);
-	this->player_history.push(this->players);
-	this->score_history.push(this->score);
-	this->turn_history.push(this->current_turn);
-	this->hexagon_after_history = std::stack<std::vector<Hexagon>>();
-	this->player_after_history = std::stack<std::vector<Player>>();
-	this->score_after_history = std::stack<std::vector<int>>();
-	this->turn_after_history = std::stack<int>();
+	this->Save();
 
 	Player* player = GetCurrentPlayer();
 	Hexagon* hexagon = GetHexagon(x, y);
@@ -309,23 +296,23 @@ void Game::Move(double x, double y) {
 				}
 			}
 			if (human_num == 1) {
-				score[player->GetIndex()] += Global::GAME::FINAL_HUMAN_MOVING_SCORE;
-				Log::System("Player at hexagon (" + std::to_string(x) + ", " + std::to_string(y) + ") is the last human. Score updated to", score[player->GetIndex()], "(+" + std::to_string(Global::GAME::FINAL_HUMAN_MOVING_SCORE)+")");
+				this->final_player = player;
+				Log::System("Player " + std::to_string(this->current_turn), "is the last human.");
 			}
 			else {
 				score[player->GetIndex()] += Global::GAME::HUMAN_MOVING_SCORE;
-				Log::System("Player at hexagon (" + std::to_string(x) + ", " + std::to_string(y) + ") moved. Score updated to", score[player->GetIndex()], "(+" + std::to_string(Global::GAME::HUMAN_MOVING_SCORE) + ")");
+				Log::System("Player " + std::to_string(this->current_turn), "moved. Score updated to", score[player->GetIndex()], "(+" + std::to_string(Global::GAME::HUMAN_MOVING_SCORE) + ")");
 			}
 		}
 
 		if (player->GetState() == PLAYER_SUPER_ZOMBIE || player->GetState() == PLAYER_ZOMBIE) {
 			for (auto prev_player : prev_players) {
 				prev_player->SetState(PLAYER_ZOMBIE);
-				Log::System("Player at hexagon (" + std::to_string(x) + ", " + std::to_string(y) + ") turned into a zombie.");
+				Log::System("Player " + std::to_string(prev_player->GetIndex()), "turned into a zombie.");
 
 				if (player->GetState() == PLAYER_SUPER_ZOMBIE) {
 					score[prev_player->GetIndex()] += Global::GAME::INFECTED_SUPER_ZOMBIE_PENALTY_SCORE;
-					Log::System("Player at hexagon (" + std::to_string(x) + ", " + std::to_string(y) + ") infected by super zombie. Score updated to", score[prev_player->GetIndex()], "(" + std::to_string(Global::GAME::INFECTED_SUPER_ZOMBIE_PENALTY_SCORE) + ")");
+					Log::System("Player " + std::to_string(prev_player->GetIndex()), "infected by super zombie. Score updated to", score[prev_player->GetIndex()], "(" + std::to_string(Global::GAME::INFECTED_SUPER_ZOMBIE_PENALTY_SCORE) + ")");
 				}
 				else {
 					this->minigame_triggered_player = GetCurrentPlayer();
@@ -367,11 +354,11 @@ void Game::Move(double x, double y) {
 		}
 		if (player->GetState() == PLAYER_ZOMBIE && hexagon->GetProperty() == HEXAGON_PAPAL) {
 			player->SetState(PLAYER_HUMAN);
-			Log::System("Player at hexagon (" + std::to_string(x) + ", " + std::to_string(y) + ") turned back to human.");
+			Log::System("Player " + std::to_string(player->GetIndex()), "turned back to human.");
 		}
 		if (player->GetState() != PLAYER_SUPER_ZOMBIE && hexagon->GetProperty() == HEXAGON_EVENT) {
 			// Event hexagon logic (to be implemented)
-			Log::System("Player at hexagon (" + std::to_string(x) + ", " + std::to_string(y) + ") triggered an event.");
+			Log::System("Player " + std::to_string(player->GetIndex()), "triggered an event.");
 
 			event_triggered_player = player;
 		}
@@ -401,7 +388,7 @@ void Game::UpdateTurn() {
 	for (auto& player : this->players) {
 		player.UpdateState();
 	}
-	if (!this->teleporting_player && !this->event_triggered_player&& !this->minigame_triggered_player) {
+	if (!this->teleporting_player && !this->event_triggered_player&& !this->minigame_triggered_player && !this->final_player) {
 		current_turn = (current_turn + 1) % players.size();
 
 		for (int i = 0; i < this->hexagons.size(); i++) {
@@ -426,7 +413,7 @@ void Game::ExecuteEvent() {
 		return;
 	}
 	if (this->event_scene == nullptr) {
-		Log::System("Executing event for player at hexagon (" + std::to_string(event_triggered_player->GetX()) + ", " + std::to_string(event_triggered_player->GetY()) + ").");
+		Log::System("Executing event for player " + std::to_string(event_triggered_player->GetIndex()) + ".");
 		this->event_scene = new EventScene(this);
 		win->AddScene(this->event_scene, 0);
 	}
@@ -480,6 +467,26 @@ void Game::ExecuteMinigame() {
 		minigame_triggered_player = nullptr;
 		win->DeleteScene(this->minigame_scene);
 		this->minigame_scene = nullptr;
+	}
+}
+
+bool Game::IsFinalhumanTriggerd() {
+	return final_player != nullptr;
+}
+
+void Game::ExecuteFinalHuman() {
+	if (final_player == nullptr) {
+		return;
+	}
+	if (this->final_human_scene == nullptr) {
+		Log::System("Executing final human scene for player", final_player->GetIndex() + ".");
+		this->final_human_scene = new FinalHumanScene(this);
+		win->AddScene(this->final_human_scene, 0);
+	}
+	else if (static_cast<FinalHumanScene*>(this->final_human_scene)->IsEnd()) {
+		final_player = nullptr;
+		win->DeleteScene(this->final_human_scene);
+		this->final_human_scene = nullptr;
 	}
 }
 
@@ -555,6 +562,17 @@ void Game::Redo() {
 	this->teleporting_player = nullptr;
 	this->timer = clock();
 	Log::System("Game state redone from history. Current turn: " + std::to_string(current_turn + 1));
+}
+
+void Game::Save() {
+	this->hexagon_history.push(this->hexagons);
+	this->player_history.push(this->players);
+	this->score_history.push(this->score);
+	this->turn_history.push(this->current_turn);
+	this->hexagon_after_history = std::stack<std::vector<Hexagon>>();
+	this->player_after_history = std::stack<std::vector<Player>>();
+	this->score_after_history = std::stack<std::vector<int>>();
+	this->turn_after_history = std::stack<int>();
 }
 
 void Game::PauseAndResume() {
