@@ -149,7 +149,7 @@ SDL_Texture* LoadImage(const char* filename, SDL_Renderer* renderer) {
 	return texture;
 }
 
-SDL_Texture* LoadText(const char* str, SDL_Renderer* renderer, int size, const char* fontfile_name, int r, int g, int b) {
+SDL_Texture* LoadText(const char* str, SDL_Renderer* renderer, int size, const char* fontfile_name, int r, int g, int b, int align, int spacing) {
 	if (!renderer || !str || !fontfile_name) {
 		Log::FormattedDebug("Texture", "LoadText", "Invalid parameter(s).");
 		return nullptr;
@@ -237,7 +237,7 @@ SDL_Texture* LoadText(const char* str, SDL_Renderer* renderer, int size, const c
 	if (max_w <= 0) max_w = 1;
 	if (total_h <= 0) total_h = lineSkip > 0 ? lineSkip : scaledSize;
 
-	total_h += 20 * Global::WIN::SIZE_MULTIPLIER * (lines.size() - 1);
+	total_h += spacing * Global::WIN::SIZE_MULTIPLIER * (lines.size() - 1);
 
 	SDL_Surface* finalSurface = SDL_CreateRGBSurfaceWithFormat(
 		0, max_w, total_h, 32, SDL_PIXELFORMAT_RGBA32
@@ -255,12 +255,16 @@ SDL_Texture* LoadText(const char* str, SDL_Renderer* renderer, int size, const c
 
 	int y = 0;
 	for (const auto& it : items) {
-		const int drawH = (it.h > 0 ? it.h : (lineSkip > 0 ? lineSkip : scaledSize)) + 20 * Global::WIN::SIZE_MULTIPLIER;
+		const int drawH = (it.h > 0 ? it.h : (lineSkip > 0 ? lineSkip : scaledSize)) + spacing * Global::WIN::SIZE_MULTIPLIER;
 		if (it.surf && it.w > 0 && it.h > 0) {
 			SDL_Rect dst;
 			dst.w = it.w;
 			dst.h = it.h;
 			dst.x = (max_w - it.w) / 2;
+			if (align == -1)
+				dst.x = 0;
+			else if (align == 1)
+				dst.x = max_w - it.w;
 			dst.y = y;
 			SDL_BlitSurface(it.surf, nullptr, finalSurface, &dst);
 		}

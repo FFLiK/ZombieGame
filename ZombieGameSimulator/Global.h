@@ -37,9 +37,9 @@ namespace Global {
 
 	class SYSTEM {
 	public:
-		static constexpr const char* NAME = "The Final Human";
+		static constexpr const char* NAME = "The Ultimate Survivor";
 		static constexpr const char* DEV_NAME = "Zombie Game";
-		static constexpr const char* VERSION = "3.2.0";
+		static constexpr const char* VERSION = "3.4.0";
 		static const bool IS_RELEASE = true;
 		static constexpr const char* DEVELOPER = "Freshman Student Council";
 
@@ -56,7 +56,7 @@ namespace Global {
 
 		static int const TITLE_FONT_SIZE = 60;
 		static int const DEV_FONT_SIZE = 16;
-		static int const VER_FONT_SIZE = 24;
+		static int const VER_FONT_SIZE = 16;
 	};
 
 	class EVENT {

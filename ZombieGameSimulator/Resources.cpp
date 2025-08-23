@@ -24,6 +24,8 @@ SDL_Texture* Resources::event_roulette_num = nullptr;
 SDL_Texture* Resources::event_roulette_sign = nullptr;
 SDL_Texture* Resources::minigame_roulette = nullptr;
 
+SDL_Texture* Resources::roulette_pin = nullptr;
+
 PdfViewer* Resources::event_pdf = nullptr;
 PdfViewer* Resources::minigame_unified_voice_game_pdf = nullptr;
 PdfViewer* Resources::minigame_emoji_game_pdf = nullptr;
@@ -53,6 +55,8 @@ void Resources::InitResources(SDL_Renderer* renderer) {
 	event_roulette_num = LoadImage("event_roulette_num", renderer);
 	event_roulette_sign = LoadImage("event_roulette_sign", renderer);
 	minigame_roulette = LoadImage("minigame_roulette", renderer);
+
+	roulette_pin = LoadImage("roulette_pin", renderer);
 
 	event_pdf = new PdfViewer("event", renderer);
 	minigame_unified_voice_game_pdf = new PdfViewer("minigame_unified_voice_game", renderer);

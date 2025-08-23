@@ -38,12 +38,14 @@ int main(int argc, char *argv[]) {
 	Log::System("Zombie Game Simulator started.");
 
 	Window* win = new Window({Global::SYSTEM::NAME, Global::WIN::SCREEN_WIDTH, Global::WIN::SCREEN_HEIGHT, Global::WIN::FPS});
+	
+	Game* game = new Game(win);
+	game->Open();
+	
 	win->Execute();
 
-	Game game(win);
-
 	Scene* scene;
-	scene = new GameScene(&game);
+	scene = new GameScene(game);
 	win->AddScene(scene, 0);
 	scene = new BackgroundScene();
 	win->AddScene(scene, 1);

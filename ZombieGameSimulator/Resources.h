@@ -22,6 +22,8 @@ public:
 	static SDL_Texture* event_roulette_sign;
 	static SDL_Texture* minigame_roulette;
 
+	static SDL_Texture* roulette_pin;
+
 	static PdfViewer* event_pdf;
 	static PdfViewer* minigame_unified_voice_game_pdf;
 	static PdfViewer* minigame_emoji_game_pdf;

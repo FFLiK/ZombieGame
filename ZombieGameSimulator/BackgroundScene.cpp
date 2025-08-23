@@ -47,14 +47,21 @@ int BackgroundScene::Rendering() {
 	SDL_QueryTexture(this->version_tex, NULL, NULL, &src.w, &src.h);
 	dst.w = src.w;
 	dst.h = src.h;
-	dst.y = 80 * Global::WIN::SIZE_MULTIPLIER;
+	dst.x = Global::WIN::SCREEN_WIDTH - 20 * Global::WIN::SIZE_MULTIPLIER - src.w;
+	dst.y = Global::WIN::SCREEN_HEIGHT - 10 * Global::WIN::SIZE_MULTIPLIER - src.h;
 	SDL_RenderCopy(this->ren, this->version_tex, &src, &dst);
 	return 0;
 }
 
 
 int BackgroundScene::ProcessInit() {
-	this->title_tex = LoadText(Global::SYSTEM::NAME, this->ren, Global::SYSTEM::TITLE_FONT_SIZE, "font", 255, 255, 255);
+	string title_text = Global::SYSTEM::NAME;
+	for (int i = 0; i < title_text.size(); i++) {
+		if (title_text[i] == ' ') {
+			title_text[i] = '\n';
+		}
+	}
+	this->title_tex = LoadText(title_text.c_str(), this->ren, Global::SYSTEM::TITLE_FONT_SIZE, "font", 255, 255, 255, -1, -10);
 	this->developer_tex = LoadText(((string)"Developed by " + Global::SYSTEM::DEVELOPER).c_str(), this->ren, Global::SYSTEM::DEV_FONT_SIZE, "font", 255, 255, 255);
 	std::string version_text = "ver" + std::string(Global::SYSTEM::VERSION) + "-" + (Global::SYSTEM::IS_RELEASE ? "release" : "pre-release") + (Global::SYSTEM::DEBUG_MODE ? " w.Debug Mode" : "");
 	this->version_tex = LoadText(version_text.c_str(), this->ren, Global::SYSTEM::VER_FONT_SIZE, "font", 255, 255, 255);

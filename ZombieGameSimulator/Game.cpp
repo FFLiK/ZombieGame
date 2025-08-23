@@ -38,7 +38,7 @@ Game::Game(Window *win) : rng(std::random_device{}()) {
 	players.emplace_back(PLAYER_HUMAN, -4, 0, 5);
 	players.emplace_back(PLAYER_SUPER_ZOMBIE, 0, 0, -1);
 
-	this->current_turn = -1;
+	this->current_turn = 0;
 
 	this->teleporting_player = nullptr;
 	this->event_triggered_player = nullptr;
@@ -56,7 +56,20 @@ Game::Game(Window *win) : rng(std::random_device{}()) {
 		score.push_back(0);
 	}
 
+	// Build base directory
+	namespace fs = std::filesystem;
 
+	std::string dir;
+	if (Global::SYSTEM::USE_APPDATA) {
+		if (const char* appdata = std::getenv("APPDATA")) {
+#if defined(_WIN32)
+			dir = std::string(appdata) + "\\" + Global::SYSTEM::NAME + "\\";
+#else
+			dir = std::string(appdata) + "/" + Global::SYSTEM::NAME + "/";
+#endif
+		}
+	}
+	this->save_file_path = dir + "save.dat";
 	Log::System("Game setup completed.");
 	Log::System("Press SPACE to start the game.");
 }
@@ -112,7 +125,6 @@ int Game::GetScore(int index) const {
 void Game::Start() {
 	this->timer = clock();
 	this->is_started = true;
-	this->current_turn = 0;
 
 	this->pause_timer_i_dont_want_to_use_it_but_HWI_said_it_is_necessary_bull_shit = -1;
 
@@ -401,6 +413,8 @@ void Game::UpdateTurn() {
 		this->have_to_update = false;
 
 		Log::System("Updated turn to player " + std::to_string(current_turn) + " at hexagon (" + std::to_string(players[current_turn].GetX()) + ", " + std::to_string(players[current_turn].GetY()) + ").");
+	
+		this->SaveData();
 	}
 }
 
@@ -491,6 +505,9 @@ void Game::ExecuteFinalHuman() {
 }
 
 int Game::LeftTimerTick() {
+	if (this->is_started == false) {
+		return 0;
+	}
 	if (this->timer == 0) {
 		return Global::GAME::TIME_LIMIT;
 	}
@@ -515,6 +532,60 @@ int Game::LeftTimerTick() {
 
 bool Game::IsStarted() const {
 	return this->is_started;
+}
+
+void Game::Open() {
+	std::ifstream load_file;
+	namespace fs = std::filesystem;
+	load_file.open(this->save_file_path, std::ios::binary | std::ios::in);
+	if (!load_file.is_open()) {
+		Log::System("Save file is empty.");
+		return;
+	}
+	if (fs::file_size(this->save_file_path) == 0) {
+		Log::System("Save file is empty.");
+		return;
+	}
+	load_file.read(reinterpret_cast<char*>(&this->current_turn), sizeof(this->current_turn));
+	for (auto& hexagon : this->hexagons) {
+		auto v = hexagon.GetProperty();
+		load_file.read(reinterpret_cast<char*>(&v), sizeof(v));
+		hexagon.SetProperty(v);
+	}
+	for (auto& player : this->players) {
+		auto v1 = player.GetX();
+		auto v2 = player.GetY();
+		auto v3 = player.GetState();
+		load_file.read(reinterpret_cast<char*>(&v1), sizeof(v1));
+		load_file.read(reinterpret_cast<char*>(&v2), sizeof(v2));
+		load_file.read(reinterpret_cast<char*>(&v3), sizeof(v3));
+		player.SetPosition(v1, v2, nullptr);
+		player.SetState(v3);
+	}
+	for (auto& score : this->score) {
+		load_file.read(reinterpret_cast<char*>(&score), sizeof(int));
+	}
+	load_file.close();
+
+	// print loaded game state
+	Log::System("Game state loaded from file.");
+	Log::System("GAME STATE");
+	Log::System("Current turn: " + std::to_string(current_turn));
+	for (int i = 0; i < this->hexagons.size(); i++) {
+		Log::System("Hexagon " + std::to_string(i) + ": (" + std::to_string(this->hexagons[i].GetX()) + ", " + std::to_string(this->hexagons[i].GetY()) + "), Property: " + std::to_string(this->hexagons[i].GetProperty()));
+	}
+	for (int i = 0; i < this->players.size(); i++) {
+		Log::System("Player " + std::to_string(i) + ": (" + std::to_string(this->players[i].GetX()) + ", " + std::to_string(this->players[i].GetY()) + "), State: " + std::to_string(this->players[i].GetState()));
+	}
+
+	this->hexagon_history = std::stack<std::vector<Hexagon>>();
+	this->player_history = std::stack<std::vector<Player>>();
+	this->score_history = std::stack<std::vector<int>>();
+	this->turn_history = std::stack<int>();
+	this->hexagon_after_history = std::stack<std::vector<Hexagon>>();
+	this->player_after_history = std::stack<std::vector<Player>>();
+	this->score_after_history = std::stack<std::vector<int>>();
+	this->turn_after_history = std::stack<int>();
 }
 
 void Game::Undo() {
@@ -575,6 +646,34 @@ void Game::Save() {
 	this->turn_after_history = std::stack<int>();
 }
 
+void Game::SaveData() {
+	std::ofstream save_file;
+	namespace fs = std::filesystem;
+	save_file.open(this->save_file_path, std::ios::binary | std::ios::out);
+	if (!save_file.is_open()) {
+		Log::Error("Failed to open save file for writing.");
+		return;
+	}
+	save_file.write(reinterpret_cast<const char*>(&this->current_turn), sizeof(this->current_turn));
+	for (const auto& hexagon : this->hexagons) {
+		auto v = hexagon.GetProperty();
+		save_file.write(reinterpret_cast<const char*>(&v), sizeof(v));
+	}
+	for (const auto& player : this->players) {
+		auto v1 = player.GetX();
+		auto v2 = player.GetY();
+		auto v3 = player.GetState();
+		save_file.write(reinterpret_cast<const char*>(&v1), sizeof(v1));
+		save_file.write(reinterpret_cast<const char*>(&v2), sizeof(v2));
+		save_file.write(reinterpret_cast<const char*>(&v3), sizeof(v3));
+	}
+	for (const auto& score : this->score) {
+		save_file.write(reinterpret_cast<const char*>(&score), sizeof(int));
+	}
+	save_file.close();
+	Log::System("Game state saved to file.");
+}
+
 void Game::PauseAndResume() {
 	if (this->pause_timer_i_dont_want_to_use_it_but_HWI_said_it_is_necessary_bull_shit == -1) {
 		this->pause_timer_i_dont_want_to_use_it_but_HWI_said_it_is_necessary_bull_shit = clock();
@@ -583,4 +682,8 @@ void Game::PauseAndResume() {
 		this->timer += clock() - this->pause_timer_i_dont_want_to_use_it_but_HWI_said_it_is_necessary_bull_shit;
 		this->pause_timer_i_dont_want_to_use_it_but_HWI_said_it_is_necessary_bull_shit = -1;
 	}
+}
+
+Window* Game::GetWindow() const {
+	return this->win;
 }

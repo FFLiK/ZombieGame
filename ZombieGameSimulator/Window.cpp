@@ -1,3 +1,4 @@
+#pragma once
 #include "Window.h"
 #include <ctime>
 #include <thread>

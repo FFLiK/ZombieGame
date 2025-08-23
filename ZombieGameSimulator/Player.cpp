@@ -184,8 +184,13 @@ void Player::DrawPlayer(SDL_Renderer* ren, bool activated, int overlapped_count,
 void Player::SetPosition(double x, double y, std::vector<Hexagon*>* path) {
 	this->x = x;
 	this->y = y;
-	this->path = *path;
-	std::reverse(this->path.begin(), this->path.end());
+	if (path) {
+		this->path = *path;
+		std::reverse(this->path.begin(), this->path.end());
+	}
+	else {
+		Hexagon::GetCenterPointFromHexagonCoordinate(x, y, this->center_x, this->center_y);
+	}
 }
 
 void Player::SetState(PlayerState state) {

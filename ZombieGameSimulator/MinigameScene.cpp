@@ -67,7 +67,30 @@ int MinigameScene::Rendering() {
 
 	if (f != 0) {
 		if (Global::SYSTEM::TEXTURE_RENDERING && Resources::minigame_roulette) {
+			SDL_SetTextureBlendMode(Resources::minigame_roulette, SDL_BLENDMODE_BLEND);
+			SDL_SetTextureAlphaMod(Resources::minigame_roulette, 255 * f);
+			SDL_Rect src, dst;
+			SDL_QueryTexture(Resources::minigame_roulette, NULL, NULL, &src.w, &src.h);
+			src.x = 0;
+			src.y = 0;
+			dst.w = src.w * Global::EVENT::ROULETTE_SIZE / Global::WIN::SCREEN_HEIGHT * 0.8;
+			dst.h = src.h * Global::EVENT::ROULETTE_SIZE / Global::WIN::SCREEN_HEIGHT * 0.8;
+			dst.x = (Global::WIN::SCREEN_WIDTH - dst.w) / 2;
+			dst.y = roulette_position - dst.h / 2;
+			SDL_RenderCopyEx(this->ren, Resources::minigame_roulette, &src, &dst, this->roulette_angle, NULL, SDL_FLIP_NONE);
+		
 
+			SDL_SetTextureBlendMode(Resources::roulette_pin, SDL_BLENDMODE_BLEND);
+			SDL_SetTextureAlphaMod(Resources::roulette_pin, 255 * f);
+			SDL_Rect pin_src, pin_dst;
+			SDL_QueryTexture(Resources::roulette_pin, NULL, NULL, &pin_src.w, &pin_src.h);
+			pin_src.x = 0;
+			pin_src.y = 0;
+			pin_dst.w = pin_src.w * Global::EVENT::ROULETTE_SIZE / Global::WIN::SCREEN_HEIGHT * 0.8;
+			pin_dst.h = pin_src.h * Global::EVENT::ROULETTE_SIZE / Global::WIN::SCREEN_HEIGHT * 0.8;
+			pin_dst.x = Global::WIN::SCREEN_WIDTH_HALF - pin_dst.w / 2;
+			pin_dst.y = roulette_position - pin_dst.h / 2 - dst.h / 2 * 0.9;
+			SDL_RenderCopy(this->ren, Resources::roulette_pin, &pin_src, &pin_dst);
 		}
 		else {
 			SDL_SetRenderDrawBlendMode(this->ren, SDL_BLENDMODE_BLEND);
@@ -121,6 +144,11 @@ int MinigameScene::Rendering() {
 			fraction = (double)this->end_transition_level / (double)this->transition_level_delta;
 			fraction = 1.0 - fraction;
 		}
+
+		SDL_Rect title_rect;
+		title_rect.x = 0;
+		title_rect.w = Global::WIN::SCREEN_WIDTH;
+
 		SDL_SetTextureBlendMode(this->title_texture, SDL_BLENDMODE_BLEND);
 		SDL_SetTextureAlphaMod(this->title_texture, 255 * fraction);
 		SDL_Rect src, dst;
@@ -131,6 +159,13 @@ int MinigameScene::Rendering() {
 		dst.y = Global::WIN::SCREEN_HEIGHT_HALF - 20 * Global::WIN::SIZE_MULTIPLIER - src.h;
 		dst.w = src.w;
 		dst.h = src.h;
+
+		title_rect.h = 200 * Global::WIN::SIZE_MULTIPLIER;
+		title_rect.y = Global::WIN::SCREEN_HEIGHT_HALF - title_rect.h / 2;
+
+		SDL_SetRenderDrawColor(this->ren, 0, 0, 0, 150 * fraction);
+		SDL_RenderFillRect(this->ren, &title_rect);
+
 		SDL_RenderCopy(this->ren, this->title_texture, &src, &dst);
 
 		SDL_Texture* input_tex = this->input->GetTexture();
@@ -216,7 +251,10 @@ int MinigameScene::Rendering() {
 		this->title_transition_level++;
 	}
 	else if (this->pdf_viewer || this->pdf_texture) {
-		if (this->pdf_start_transition_level < this->transition_level_delta) {
+		if (this->pdf_delay_transition_level < this->transition_level_delta * 2) {
+			this->pdf_delay_transition_level++;
+		}
+		else if (this->pdf_start_transition_level < this->transition_level_delta) {
 			this->pdf_start_transition_level++;
 			if (!this->pdf_texture) {
 				this->pdf_texture = this->pdf_viewer->GetCurrentPageTexture();

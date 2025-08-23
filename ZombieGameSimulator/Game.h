@@ -16,6 +16,8 @@ private:
 
 	std::vector<int> score;
 
+	std::string save_file_path;
+
 	std::stack<vector<Hexagon>> hexagon_history;
 	std::stack<vector<Player>> player_history;
 	std::stack<vector<int>> score_history;
@@ -79,11 +81,15 @@ public:
 
 	bool IsStarted() const;
 
+	void Open();
 	void Undo();
 	void Redo();
 	void Save();
+	void SaveData();
 
 	void PauseAndResume();
+
+	Window* GetWindow() const;
 
 	friend class EventScene;
 	friend class MinigameScene;

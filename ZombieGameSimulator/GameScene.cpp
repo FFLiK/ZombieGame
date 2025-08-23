@@ -19,12 +19,15 @@ GameScene::~GameScene() {
 		SDL_DestroyTexture(tex);
 	}
 
+	if (this->game) {
+		delete this->game;
+	}
+
 	Log::FormattedDebug("GameScene", "Destructor", "Calling destructor of GameScene");
 }
 
 int GameScene::Rendering() {
 	// Render timer
-
 	SDL_Rect src, dst;
 	SDL_QueryTexture(this->timer_title_tex, NULL, NULL, &src.w, &src.h);
 	src.x = 0;
@@ -32,14 +35,14 @@ int GameScene::Rendering() {
 	dst.w = src.w;
 	dst.h = src.h;
 	dst.x = 40 * Global::WIN::SIZE_MULTIPLIER;
-	dst.y = Global::WIN::SCREEN_HEIGHT - 120 * Global::WIN::SIZE_MULTIPLIER - src.h;
+	dst.y = Global::WIN::SCREEN_HEIGHT - 130 * Global::WIN::SIZE_MULTIPLIER - src.h;
 	SDL_RenderCopy(this->ren, this->timer_title_tex, &src, &dst);
 	SDL_QueryTexture(this->timer_text_tex[game->LeftTimerTick()], NULL, NULL, &src.w, &src.h);
 	dst.w = src.w;
 	dst.h = src.h;
-	dst.y = Global::WIN::SCREEN_HEIGHT - 30 * Global::WIN::SIZE_MULTIPLIER - src.h;
+	dst.y = Global::WIN::SCREEN_HEIGHT - 20 * Global::WIN::SIZE_MULTIPLIER - src.h;
 	SDL_RenderCopy(this->ren, this->timer_text_tex[game->LeftTimerTick()], NULL, &dst);
-	
+
 	// Render scores
 	SDL_QueryTexture(this->score_title_tex, NULL, NULL, &src.w, &src.h);
 	dst.w = src.w;
@@ -52,8 +55,8 @@ int GameScene::Rendering() {
 		dst.w = src.w;
 		dst.h = src.h;
 		dst.x = Global::WIN::SCREEN_WIDTH - 200 * Global::WIN::SIZE_MULTIPLIER;
-		dst.y = 100 * Global::WIN::SIZE_MULTIPLIER + i * (src.h + 8 * Global::WIN::SIZE_MULTIPLIER);
-		if (this->game->GetCurrentTurn() == i) {
+		dst.y = 110 * Global::WIN::SIZE_MULTIPLIER + i * (src.h + 5 * Global::WIN::SIZE_MULTIPLIER);
+		if (this->game->GetCurrentTurn() == i && this->game->IsStarted()) {
 			SDL_SetTextureColorMod(this->score_text_tex[i], 100, 255, 255);
 		}
 		else {
@@ -78,7 +81,7 @@ int GameScene::Rendering() {
 			hexagon.DrawHexagon(this->ren);
 		}
 	}
-	
+
 	if (!Global::SYSTEM::TEXTURE_RENDERING) {
 		double prev_x = -1, prev_y = -1;
 		for (const auto& hexagon : path) {
@@ -97,7 +100,7 @@ int GameScene::Rendering() {
 	for (int i = game->GetPlayers()->size() - 1; i >= 0; --i) {
 		int overlapped_count = 0;
 		int overlapped_index = 0;
-		
+
 		if (game->GetPlayers()->at(i).IsArrived()) {
 			for (int j = 0; j < game->GetPlayers()->size() - 1; ++j) {
 				if (game->GetPlayers()->at(i).GetX() == game->GetPlayers()->at(j).GetX()
@@ -110,7 +113,7 @@ int GameScene::Rendering() {
 				}
 			}
 		}
-		
+
 		game->GetPlayers()->at(i).Move();
 		game->GetPlayers()->at(i).DrawPlayer(this->ren, (i == game->GetCurrentTurn()), overlapped_count, overlapped_index);
 	}
@@ -193,7 +196,6 @@ int GameScene::EventProcess(Event& evt) {
 		if (evt.mouse == MOUSE_RIGHT && evt.T == MOUSE_UP) {
 			Log::System("Forced turn change by the right click.");
 			game->Save();
-			game->UpdateTurn();
 		}
 
 		if (evt.T == KEY_UP) {
@@ -207,6 +209,12 @@ int GameScene::EventProcess(Event& evt) {
 				this->game->PauseAndResume();
 			}
 		}
+	}
+	if (evt.T == KEY_UP && evt.key == SDLK_i) {
+		auto* win = this->game->GetWindow();
+		delete this->game;
+		this->game = new Game(win);
+		this->game->SaveData();
 	}
 	return 0;
 }

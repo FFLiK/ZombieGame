@@ -171,7 +171,48 @@ int EventScene::Rendering() {
 
 	if (this->roulette_alpha > 0) {
 		if (Global::SYSTEM::TEXTURE_RENDERING && Resources::event_roulette_num && Resources::event_roulette_sign) {
+			SDL_Point center;
+			center.x = Global::WIN::SCREEN_WIDTH / 4;
+			center.y = Global::WIN::SCREEN_HEIGHT / 2;
+			SDL_SetTextureBlendMode(Resources::event_roulette_num, SDL_BLENDMODE_BLEND);
+			SDL_SetTextureAlphaMod(Resources::event_roulette_num, this->roulette_alpha);
+			SDL_Rect src, dst;
+			SDL_QueryTexture(Resources::event_roulette_num, NULL, NULL, &src.w, &src.h);
+			src.x = 0;
+			src.y = 0;
+			dst.w = src.w * Global::EVENT::ROULETTE_SIZE / Global::WIN::SCREEN_HEIGHT * 0.8;
+			dst.h = src.h * Global::EVENT::ROULETTE_SIZE / Global::WIN::SCREEN_HEIGHT * 0.8;
+			dst.x = center.x - dst.w / 2;
+			dst.y = center.y - dst.h / 2;
+			SDL_RenderCopyEx(this->ren, Resources::event_roulette_num, &src, &dst, this->roulette_angle_num, NULL, SDL_FLIP_NONE);
+		
+			SDL_SetTextureBlendMode(Resources::roulette_pin, SDL_BLENDMODE_BLEND);
+			SDL_SetTextureAlphaMod(Resources::roulette_pin, this->roulette_alpha);
+			SDL_Rect pin_src, pin_dst;
+			SDL_QueryTexture(Resources::roulette_pin, NULL, NULL, &pin_src.w, &pin_src.h);
+			pin_src.x = 0;
+			pin_src.y = 0;
+			pin_dst.w = pin_src.w * Global::EVENT::ROULETTE_SIZE / Global::WIN::SCREEN_HEIGHT * 0.8;
+			pin_dst.h = pin_src.h * Global::EVENT::ROULETTE_SIZE / Global::WIN::SCREEN_HEIGHT * 0.8;
+			pin_dst.x = center.x - pin_dst.w / 2;
+			pin_dst.y = center.y - pin_dst.h / 2 - dst.h / 2 * 0.9;
+			SDL_RenderCopy(this->ren, Resources::roulette_pin, &pin_src, &pin_dst);
 
+			center.x = Global::WIN::SCREEN_WIDTH * 3 / 4;
+			SDL_SetTextureBlendMode(Resources::event_roulette_sign, SDL_BLENDMODE_BLEND);
+			SDL_SetTextureAlphaMod(Resources::event_roulette_sign, this->roulette_alpha);
+			SDL_QueryTexture(Resources::event_roulette_sign, NULL, NULL, &src.w, &src.h);
+			src.x = 0;
+			src.y = 0;
+			dst.w = src.w * Global::EVENT::ROULETTE_SIZE / Global::WIN::SCREEN_HEIGHT * 0.8;
+			dst.h = src.h * Global::EVENT::ROULETTE_SIZE / Global::WIN::SCREEN_HEIGHT * 0.8;
+			dst.x = center.x - dst.w / 2;
+			dst.y = center.y - dst.h / 2;
+			SDL_RenderCopyEx(this->ren, Resources::event_roulette_sign, &src, &dst, this->roulette_angle_sign, NULL, SDL_FLIP_NONE);
+		
+			pin_dst.x = center.x - pin_dst.w / 2;
+			pin_dst.y = center.y - pin_dst.h / 2 - dst.h / 2 * 0.9;
+			SDL_RenderCopy(this->ren, Resources::roulette_pin, &pin_src, &pin_dst);
 		}
 		else {
 			SDL_SetRenderDrawBlendMode(this->ren, SDL_BLENDMODE_BLEND);
@@ -402,7 +443,7 @@ int EventScene::Rendering() {
 					}
 					sign_roulette_fraction -= board.fraction;
 				}
-				SDL_Texture* score_event_final_texture = LoadText(("Team " + std::to_string(this->game->GetCurrentTurn() + 1) + " gets " + (score > 0 ? "+" : "") + std::to_string(score) + " points from punch machine.").c_str(), this->ren, Global::EVENT::MAIN_FONT_SIZE, "font", 255, 255, 255);
+				SDL_Texture* score_event_final_texture = LoadText(("Team " + std::to_string(this->game->GetCurrentTurn() + 1) + " wins " + (score > 0 ? "+" : "") + std::to_string(score) + " points from punch machine.").c_str(), this->ren, Global::EVENT::MAIN_FONT_SIZE, "font", 255, 255, 255);
 
 				this->slides.push_back(Slide(Slide::TEXT, 750 * Global::WIN::FRAME_RATE_MULTIPLIER, score_event_final_texture, Slide::APPEAR));
 				this->slides.push_back(Slide(Slide::TEXT, 850 * Global::WIN::FRAME_RATE_MULTIPLIER, score_event_final_texture, Slide::DISAPPEAR));
@@ -447,14 +488,14 @@ int EventScene::ProcessInit() {
 	case GameEvent::INSTANT_EXTRA_MOVE:
 		event_main_text = "Move Again Immediately";
 		if (this->event_stroy_seed % 2) {
-			story_text = "\"Something about this...\nfeels like I need to run.\"";
+			story_text = "\"It feels like... I should start running!\"";
 			if (Global::SYSTEM::TEXTURE_RENDERING) {
 				Resources::event_pdf->SetPage(0);
 				event_background_tex = Resources::event_pdf->GetCurrentPageTexture();
 			}
 		}
 		else {
-			story_text = "Startled by a nearby explosion,\nyou instinctively throw yourself forward again.";
+			story_text = "A sudden explosion nearby\nmakes you instinctively throw yourself\ninto the floor again.";
 			if (Global::SYSTEM::TEXTURE_RENDERING) {
 				Resources::event_pdf->SetPage(1);
 				event_background_tex = Resources::event_pdf->GetCurrentPageTexture();
@@ -465,8 +506,8 @@ int EventScene::ProcessInit() {
 		break;
 
 	case GameEvent::SWAP_POSITION_WITH_TEAM:
-		event_main_text = "Swap Positions with a Target Team";
-		story_text = "\"Sorry, but it had to be done.\"";
+		event_main_text = "Swap Positions with Any Team";
+		story_text = "\"I'm sorry but... I¡¯ve got no choice.\"";
 		if (Global::SYSTEM::TEXTURE_RENDERING) {
 			Resources::event_pdf->SetPage(2);
 			event_background_tex = Resources::event_pdf->GetCurrentPageTexture();
@@ -475,16 +516,16 @@ int EventScene::ProcessInit() {
 		break;
 
 	case GameEvent::MOVE_SUPER_ZOMBIE_TO_TILE:
-		event_main_text = "Move the Super-Zombie to a Desired Space";
+		event_main_text = "Move The Super Zombie to Any Tile";
 		if (this->event_stroy_seed % 2) {
-			story_text = "\"Alright, just need to make a loud noise over there.\"";
+			story_text = "\"Yes, let¡¯s make a loud noise over there.\"";
 			if (Global::SYSTEM::TEXTURE_RENDERING) {
 				Resources::event_pdf->SetPage(3);
 				event_background_tex = Resources::event_pdf->GetCurrentPageTexture();
 			}
 		}
 		else {
-			story_text = "\"Grrraaaargh...\" Huh? The Super-Zombie seems to understand you.\n\"Hey! Over here! Check out this really cool thing!\"";
+			story_text = "\"Grrhh..\"\nWait, did the super zombie just understand my words?\n\"Hey, there¡¯s something really tempting over there!!\"";
 			if (Global::SYSTEM::TEXTURE_RENDERING) {
 				Resources::event_pdf->SetPage(4);
 				event_background_tex = Resources::event_pdf->GetCurrentPageTexture();
@@ -495,8 +536,8 @@ int EventScene::ProcessInit() {
 		break;
 
 	case GameEvent::MOVE_SUPER_ZOMBIE_NEARBY:
-		event_main_text = "Move the Super-Zombie to an Adjacent Space";
-		story_text = "\"Maybe not showering for three days was a bad idea...\nthe stench is attracting it.\"";
+		event_main_text = "Move The Super Zombie\nRight Next to Your Team";
+		story_text = "\"I haven¡¯t showered for 3 days...\nguess I smell a bit too much.\"";
 		if (Global::SYSTEM::TEXTURE_RENDERING) {
 			Resources::event_pdf->SetPage(5);
 			event_background_tex = Resources::event_pdf->GetCurrentPageTexture();
@@ -505,16 +546,16 @@ int EventScene::ProcessInit() {
 		break;
 
 	case GameEvent::CHANGE_TEAM_STATE:
-		event_main_text = "Change a Targeted Team's Status";
+		event_main_text = "Force One Team¡¯s State to Change";
 		if (this->event_stroy_seed % 2) {
-			story_text = "\"You can't fool my eyes.\n\"The rain washes away their disguise, revealing their true nature.";
+			story_text = "\"You can't fool my eyes.\"\nThe rain washes away the makeup,\nrevealing someone¡¯s true identity.";
 			if (Global::SYSTEM::TEXTURE_RENDERING) {
 				Resources::event_pdf->SetPage(7);
 				event_background_tex = Resources::event_pdf->GetCurrentPageTexture();
 			}
 		}
 		else {
-			story_text = "A boiling, viscous liquid drips from the ceiling above,\nsearing their flesh.";
+			story_text = "A boiling liquid drops from the ceiling,\nburning your skin.";
 			if (Global::SYSTEM::TEXTURE_RENDERING) {
 				Resources::event_pdf->SetPage(6);
 				event_background_tex = Resources::event_pdf->GetCurrentPageTexture();
@@ -524,16 +565,16 @@ int EventScene::ProcessInit() {
 		break;
 
 	case GameEvent::CHANGE_OWN_STATE:
-		event_main_text = "Personal Status Change";
+		event_main_text = "Reverse Your Own State";
 		if (this->event_stroy_seed % 2) {
-			story_text = "That bruise on your shoulder...\nYou finally understand the meaning behind its burning sensation.";
+			story_text = "There is a bruise on your shoulder...\nnow you finally understand\nwhat the burning feeling means.";
 			if (Global::SYSTEM::TEXTURE_RENDERING) {
 				Resources::event_pdf->SetPage(8);
 				event_background_tex = Resources::event_pdf->GetCurrentPageTexture();
 			}
 		}
 		else {
-			story_text = "You find a suspicious-looking drink on the ground.\n\"Just my luck, I was parched!... Wait, what's happening?\"";
+			story_text = "You found a suspicious drink lying on the street.\n\"Perfect timing! I was thirsty...\"\n\"Wait, what¡¯s happening?\"";
 			if (Global::SYSTEM::TEXTURE_RENDERING) {
 				Resources::event_pdf->SetPage(9);
 				event_background_tex = Resources::event_pdf->GetCurrentPageTexture();
@@ -543,8 +584,8 @@ int EventScene::ProcessInit() {
 		break;
 
 	case GameEvent::REVERSE_ALL_STATES:
-		event_main_text = "Mass Status Reversal";
-		story_text = "The sky bleeds crimson.\nThe very order of this world is being rewritten.";
+		event_main_text = "Reverse The State of All Teams";
+		story_text = "The sky turns crimson,\nand a great upheaval reverses the order of this world.";
 		if (Global::SYSTEM::TEXTURE_RENDERING) {
 			Resources::event_pdf->SetPage(10);
 			event_background_tex = Resources::event_pdf->GetCurrentPageTexture();
@@ -553,8 +594,8 @@ int EventScene::ProcessInit() {
 		break;
 
 	case GameEvent::CREATE_OBSTACLE:
-		event_main_text = "Create Obstacle";
-		story_text = "The wreckage of a nearby building has collapsed\nonto the street.";
+		event_main_text = "Block A Tile";
+		story_text = "The remaining ruins of a building collapsed,\nblocking the way.";
 		if (Global::SYSTEM::TEXTURE_RENDERING) {
 			Resources::event_pdf->SetPage(11);
 			event_background_tex = Resources::event_pdf->GetCurrentPageTexture();
@@ -563,8 +604,8 @@ int EventScene::ProcessInit() {
 		break;
 
 	case GameEvent::SCORE_ROULETTE_EVENT:
-		event_main_text = "Scoring Event";
-		story_text = "You found an old arcade punching machine.\n\"Might as well test my score, right?\"";
+		event_main_text = "Bonus point!";
+		story_text = "You¡¯ve found a punching machine.\n\"Shall I test my power?\"";
 		if (Global::SYSTEM::TEXTURE_RENDERING) {
 			Resources::event_pdf->SetPage(12);
 			event_background_tex = Resources::event_pdf->GetCurrentPageTexture();

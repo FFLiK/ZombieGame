@@ -25,6 +25,7 @@ private:
 	int title_transition_level = 0;
 	int pdf_start_transition_level = 0;
 	int pdf_end_transition_level = 0;
+	int pdf_delay_transition_level = 0;
 
 	PdfViewer* pdf_viewer = nullptr;
 	SDL_Texture* title_texture = nullptr;
