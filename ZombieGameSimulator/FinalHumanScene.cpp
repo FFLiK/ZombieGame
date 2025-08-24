@@ -114,7 +114,7 @@ int FinalHumanScene::ProcessInit() {
 	string title = "Team " + std::to_string(this->game->final_player->GetIndex() + 1) + " is the Ultimate Survivor";
 	this->title_texture = LoadText(title.c_str(), this->ren, Global::EVENT::MAIN_FONT_SIZE, "font", 255, 255, 255);
 
-	string description = "Team " + std::to_string(this->game->final_player->GetIndex() + 1) + " can steal points from another team";
+	string description = "Team " + std::to_string(this->game->final_player->GetIndex() + 1) + " can steal 4 points from another team";
 	this->description_texture = LoadText(description.c_str(), this->ren, Global::EVENT::STORY_FONT_SIZE, "font", 255, 255, 255);
 	
 	this->input = new Input();
