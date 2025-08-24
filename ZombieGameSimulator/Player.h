@@ -37,7 +37,7 @@ public:
 
 	void DrawPlayer(SDL_Renderer* ren, bool activated, int overlapped_count, int overlapped_index);
 	void SetPosition(double x, double y, std::vector<Hexagon*> *path);
-	void SetState(PlayerState state);
+	void SetState(PlayerState state, bool directly = false);
 
 	bool IsArrived();
 	void Move();

@@ -560,7 +560,7 @@ void Game::Open() {
 		load_file.read(reinterpret_cast<char*>(&v2), sizeof(v2));
 		load_file.read(reinterpret_cast<char*>(&v3), sizeof(v3));
 		player.SetPosition(v1, v2, nullptr);
-		player.SetState(v3);
+		player.SetState(v3, true);
 	}
 	for (auto& score : this->score) {
 		load_file.read(reinterpret_cast<char*>(&score), sizeof(int));

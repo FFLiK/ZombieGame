@@ -193,8 +193,11 @@ void Player::SetPosition(double x, double y, std::vector<Hexagon*>* path) {
 	}
 }
 
-void Player::SetState(PlayerState state) {
+void Player::SetState(PlayerState state, bool directly) {
 	this->reserved_state = state;
+	if (directly) {
+		this->state = reserved_state;
+	}
 }
 
 bool Player::IsArrived() {
